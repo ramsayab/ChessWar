@@ -1,0 +1,159 @@
+/* ═══════════════════════════════════════
+   Chess War — Auth Shared Styles
+   (login.html & register.html)
+   ═══════════════════════════════════════ */
+
+.auth-page {
+  display: flex; min-height: 100vh;
+}
+
+/* ── LEFT PANEL ── */
+.auth-left {
+  flex: 1;
+  background:
+    radial-gradient(ellipse 100% 100% at 20% 80%, rgba(201,168,76,0.12) 0%, transparent 60%),
+    linear-gradient(160deg, #1A1612 0%, #0E0C0A 100%);
+  display: flex; flex-direction: column;
+  justify-content: center; padding: 4rem 3.5rem;
+  position: relative; overflow: hidden;
+}
+
+.auth-board {
+  position: absolute; bottom: -4rem; right: -4rem;
+  width: 320px; height: 320px; opacity: 0.05;
+  display: grid; grid-template-columns: repeat(8, 1fr);
+  transform: rotate(12deg);
+}
+.auth-board .sq { aspect-ratio: 1; background: var(--ivory); }
+.auth-board .sq.sq-dark { background: var(--gold); }
+
+.auth-left-content { position: relative; z-index: 2; }
+
+.auth-brand {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem; color: var(--gold); margin-bottom: 3rem;
+  letter-spacing: 0.06em; text-decoration: none; display: inline-block;
+}
+
+.auth-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem; font-weight: 300; line-height: 1.5;
+  color: var(--ivory); margin-bottom: 1rem; max-width: 320px;
+}
+.auth-quote-attr {
+  font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted);
+}
+
+.auth-stats {
+  margin-top: 4rem; display: flex; gap: 2rem;
+}
+.auth-stats .stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem; color: var(--gold); line-height: 1;
+}
+.auth-stats .stat-label {
+  font-size: 0.68rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); margin-top: 0.2rem;
+}
+
+/* Benefits list (register) */
+.auth-benefits { margin-top: 3rem; }
+.benefit-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.benefit-check { color: var(--gold); font-size: 1rem; flex-shrink: 0; }
+.benefit-text { font-size: 0.85rem; color: var(--muted); }
+
+/* ── RIGHT PANEL ── */
+.auth-right {
+  width: 480px; background: #0A0806;
+  display: flex; align-items: center; justify-content: center;
+  padding: 3rem;
+  border-left: 1px solid var(--border);
+}
+
+.auth-form-wrap { width: 100%; max-width: 360px; }
+
+.auth-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem; font-weight: 500; color: var(--ivory); margin-bottom: 0.5rem;
+}
+.auth-sub {
+  font-size: 0.85rem; color: var(--muted); margin-bottom: 2.5rem; font-weight: 300;
+}
+.auth-sub a { color: var(--gold); text-decoration: none; cursor: pointer; }
+.auth-sub a:hover { text-decoration: underline; }
+
+/* ── FORM ELEMENTS ── */
+.form-group { margin-bottom: 1.4rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+.form-label {
+  display: block; font-size: 0.72rem;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 0.55rem;
+}
+
+.form-input {
+  width: 100%; padding: 0.85rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 2px; color: var(--ivory);
+  font-family: 'Jost', sans-serif; font-size: 0.9rem;
+  transition: border-color 0.2s, background 0.2s; outline: none;
+}
+.form-input::placeholder { color: rgba(107,99,85,0.6); }
+.form-input:focus {
+  border-color: var(--gold); background: rgba(201,168,76,0.04);
+}
+select.form-input { appearance: none; cursor: pointer; }
+
+.form-check {
+  display: flex; align-items: flex-start; gap: 0.6rem;
+  font-size: 0.79rem; color: var(--muted); cursor: pointer; line-height: 1.5;
+  margin-bottom: 1.4rem;
+}
+.form-check input { accent-color: var(--gold); margin-top: 2px; flex-shrink: 0; }
+.form-check a { color: var(--gold); }
+
+.form-forgot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1.5rem;
+}
+.form-remember {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.8rem; color: var(--muted); cursor: pointer;
+}
+.form-remember input { accent-color: var(--gold); }
+.form-forgot-link {
+  font-size: 0.8rem; color: var(--gold); text-decoration: none;
+}
+.form-forgot-link:hover { text-decoration: underline; }
+
+/* ── DIVIDER & OAUTH ── */
+.divider {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 1.6rem 0; color: var(--muted); font-size: 0.78rem;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.oauth-btn {
+  width: 100%; padding: 0.85rem;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 2px; color: var(--ivory);
+  font-family: 'Jost', sans-serif; font-size: 0.85rem;
+  letter-spacing: 0.08em; cursor: pointer;
+  transition: border-color 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 0.7rem;
+}
+.oauth-btn:hover { border-color: rgba(201,168,76,0.5); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .auth-left { display: none; }
+  .auth-right { width: 100%; border-left: none; }
+}
