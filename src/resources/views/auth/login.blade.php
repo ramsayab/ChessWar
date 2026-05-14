@@ -48,19 +48,27 @@
           Don't have an account? <a href="/register">Create one</a>
         </p>
 
+        
+      <form method="POST" action="/login">
+      @csrf
         <div class="form-group animate animate-2">
           <label class="form-label" for="email">Email Address</label>
-          <input id="email" type="email" class="form-input" placeholder="you@example.com" autocomplete="email">
+          <input name="email" id="email" type="email" class="form-input" placeholder="you@example.com" autocomplete="email">
         </div>
-
         <div class="form-group animate animate-3">
           <label class="form-label" for="password">Password</label>
-          <input id="password" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
+          <input name="password" id="password" type="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
         </div>
 
-        <button class="btn-full animate animate-4" onclick="window.location.href='dashboard.html'">
-          Sign In
+        <button class="btn-full animate animate-4" type="submit">
+          Login
         </button>
+
+      </form>
+
+
+
+
 
       </div>
     </div>

@@ -1,10 +1,8 @@
 <?php
 
-use App\Http\Controllers\UserChessController;
-use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
+use App\Http\Controllers\AuthController;
 
 /* NOTE: Do Not Remove
 / Livewire asset handling if using sub folder in domain
@@ -20,23 +18,26 @@ Livewire::setScriptRoute(function ($handle) {
 /*
 / END
 */
+
 Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/login', function () {
+    return auth()->check() ? redirect('/dashboard') : app(AuthController::class)->showLogin();
+})->name('login');
 
 Route::get('/register', function () {
-    return view('register');
+    return auth()->check() ? redirect('/dashboard') : app(AuthController::class)->showRegister();
 });
 
-
-Route::get('/login', function () {
-    return view('login');
+Route::middleware('guest')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
 });
+
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-});
-
-
-Route::post('/mantap', [UserChessController::class, 'register']);
+})->middleware('auth')->name('dashboard');

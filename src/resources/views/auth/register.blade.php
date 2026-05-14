@@ -44,20 +44,20 @@
     </div>
 
     <!-- ── RIGHT PANEL ── -->
+  <div class="auth-right">
+  <div class="auth-form-wrap">
+  <h1 class="auth-title animate animate-1">Create account.</h1>
+  <p class="auth-sub animate animate-2">
+  Already have an account? <a href="/login">Sign in</a>
+  </p>
 
-    <div class="auth-right">
-      <div class="auth-form-wrap">
-        <form action="/mantap" method="POST">
-        @csrf
-        <h1 class="auth-title animate animate-1">Create account.</h1>
-        <p class="auth-sub animate animate-2">
-          Already have an account? <a href="/login">Sign in</a>
-        </p>
+  <form action="/register" method="POST">
+    @csrf
 
-        <div class="form-group animate animate-2">
-            <label class="form-label" for="name">Name</label>
-            <input name="firstname" id="firstName" type="text" class="form-input" placeholder="CECEP" autocomplete="given-name">
-        </div>
+    <div class="form-group animate animate-2">
+        <label class="form-label" for="name">Name</label>
+        <input name="name" id="firstName" type="text" class="form-input" placeholder="CECEP" autocomplete="given-name">
+    </div>
 
 
         <div class="form-group animate animate-2">
@@ -77,10 +77,17 @@
           </div>
         </div>
 
-        <button class="btn-full animate animate-4" onclick="window.location.href='/dashboard'">
+        <div class="form-group animate animate-3">
+          <div class="form-group">
+            <label class="form-label" for="password_confirmation">Confirm Password</label>
+            <input name="password_confirmation" id="password_confirmation" type="password" class="form-input" placeholder="••••••••" autocomplete="new-password">
+          </div>
+        </div>
+
+        <button class="btn-full animate animate-4" type="submit">
           Create Account
         </button>
-
+  </form>
 
   <script src="js/main.js"></script>
 </body>

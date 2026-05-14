@@ -16,13 +16,13 @@ class UserSeeder extends Seeder
     {
         $user = User::firstOrCreate(
             ['email' => 'admin@admin.com'],
-            ['name' => 'Super Admin', 'password' => Hash::make('password')]
+            ['name' => 'Super Admin', 'username' => 'admin', 'password' => Hash::make('password')]
         );
         $user->assignRole('super_admin');
 
         $user = User::firstOrCreate(
             ['email' => 'user@admin.com'],
-            ['name' => 'User Account', 'password' => Hash::make('password')]
+            ['name' => 'User Account', 'username' => 'user', 'password' => Hash::make('password')]
         );
         $user->assignRole('user');
     }
