@@ -3,19 +3,16 @@
 namespace App\Filament\Admin\Resources;
 
 use App\Filament\Admin\Resources\UserChessResource\Pages;
-use App\Filament\Admin\Resources\UserChessResource\RelationManagers;
-use App\Models\UserChess;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class UserChessResource extends Resource
 {
-    protected static ?string $model = UserChess::class;
+    protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

@@ -13,7 +13,7 @@
 
   <!-- ── NAVIGATION ── -->
   <nav class="main-nav">
-    <a class="nav-logo" href="index.html">Chess<span>War</span></a>
+    <a class="nav-logo" href="/">Chess<span>War</span></a>
     <div class="nav-links">
       <a href="#">Play</a>
       <a href="#">Tournaments</a>
@@ -45,7 +45,7 @@
         An elite platform for serious chess players. Compete, analyze, and refine your game with world-class tools and a community that shares your passion.
       </p>
       <div class="hero-btns animate animate-4">
-        <a href="register.html"><button class="btn-primary">Start Playing</button></a>
+        <a href="/register"><button class="btn-primary">Start Playing</button></a>
         <button class="btn-ghost">Watch Live</button>
       </div>
     </div>
