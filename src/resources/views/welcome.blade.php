@@ -61,7 +61,7 @@
             <path d="M12 2L8 7H3l3.5 3-1.5 5 5-2.5L15 15l-1.5-5L17 7h-5L12 2z"/>
           </svg>
           <div class="feature-title">Steroid Knight</div>
-          <p class="feature-desc">Knight punya langkah 2x lebih jauh dan jangkauan kill juga naik 2x.</p>
+          <p class="feature-desc">Knight punya jangkauan dua kali lebih jauh dari biasanya.</p>
         </div>
 
         <div class="feature-card">
@@ -79,7 +79,7 @@
             <polyline points="12 6 12 12 16 14"/>
           </svg>
           <div class="feature-title">Immortal King</div>
-          <p class="feature-desc">King punya dua nyawa. Bidak lawan yang meng-kill akan berpindah menjadi milikmu.</p>
+          <p class="feature-desc">King punya double life. Bidak lawan yang meng-kill King akan mati.</p>
         </div>
 
         <div class="feature-card">
@@ -96,8 +96,8 @@
           <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
-          <div class="feature-title">Baby Queen</div>
-          <p class="feature-desc">Saat Queen mati, ia hidup lagi sebagai versi mini dengan langkah sama tapi jarak setengah.</p>
+          <div class="feature-title">Ramp Queen</div>
+          <p class="feature-desc">Queen bisa jalan ke segala arah (benar-benar semua arah) tanpa batasan diagonal atau lurus.</p>
         </div>
 
         <div class="feature-card">

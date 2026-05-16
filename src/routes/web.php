@@ -41,3 +41,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware('auth')->name('dashboard');
+
+Route::get('/game', function () {
+    return view('game');
+})->middleware('auth')->name('game');

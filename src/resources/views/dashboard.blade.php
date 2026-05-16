@@ -39,7 +39,7 @@
         <p class="dash-kicker">Dashboard</p>
         <h1>Welcome, {{ $displayName }}</h1>
         <p>Ready for your next match? Jump in and start playing now.</p>
-        <a class="play-now-btn" href="#">Play Now</a>
+        <a class="play-now-btn" href="/game">Play Now</a>
       </section>
 
       <section class="quick-section animate animate-2">
