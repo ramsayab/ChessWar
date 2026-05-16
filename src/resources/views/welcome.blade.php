@@ -60,7 +60,7 @@
           <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M12 2L8 7H3l3.5 3-1.5 5 5-2.5L15 15l-1.5-5L17 7h-5L12 2z"/>
           </svg>
-          <div class="feature-title">Steroid Knight</div>
+          <div class="feature-title">Blink Knight</div>
           <p class="feature-desc">Knight punya jangkauan dua kali lebih jauh dari biasanya.</p>
         </div>
 
@@ -78,7 +78,7 @@
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
-          <div class="feature-title">Immortal King</div>
+          <div class="feature-title">Undying King</div>
           <p class="feature-desc">King punya double life. Bidak lawan yang meng-kill King akan mati.</p>
         </div>
 
@@ -96,7 +96,7 @@
           <svg class="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
-          <div class="feature-title">Ramp Queen</div>
+          <div class="feature-title">Omni Queen</div>
           <p class="feature-desc">Queen bisa jalan ke segala arah (benar-benar semua arah) tanpa batasan diagonal atau lurus.</p>
         </div>
 
