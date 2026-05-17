@@ -2,9 +2,17 @@
 
 ## Identitas
 
-| Nama | NIM |
-| --- | --- |
+| Nama           | NIM         |
+| -------------- | ----------- |
 | Ramsay Abelson | 20240801042 |
+
+<div>
+  <p style="margin-top:12px">
+    <a href="docs/LAPORAN-AWAL-PROJECT-AKHIR.pdf" style="display:inline-block; background:#1f6feb; color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:600">Laporan UTS — Klik di sini</a>
+  </p>
+</div>
+
+<div style="height:28px"></div>
 
 ## Deskripsi Project
 
@@ -153,10 +161,10 @@ Role:
 
 User bawaan:
 
-| Role | Email | Password |
-| --- | --- | --- |
+| Role        | Email           | Password |
+| ----------- | --------------- | -------- |
 | super_admin | admin@admin.com | password |
-| user | user@admin.com | password |
+| user        | user@admin.com  | password |
 
 ### 9. Database Match
 
@@ -199,17 +207,17 @@ chess_war/
 
 ## Route Utama
 
-| Method | Route | Fungsi |
-| --- | --- | --- |
-| GET | `/` | Landing page |
-| GET | `/login` | Halaman login |
-| POST | `/login` | Proses login |
-| GET | `/register` | Halaman register |
-| POST | `/register` | Proses register |
-| POST | `/logout` | Logout |
-| GET | `/dashboard` | Dashboard pengguna |
-| GET | `/game` | Halaman game catur |
-| GET | `/admin` | Panel admin Filament |
+| Method | Route        | Fungsi               |
+| ------ | ------------ | -------------------- |
+| GET    | `/`          | Landing page         |
+| GET    | `/login`     | Halaman login        |
+| POST   | `/login`     | Proses login         |
+| GET    | `/register`  | Halaman register     |
+| POST   | `/register`  | Proses register      |
+| POST   | `/logout`    | Logout               |
+| GET    | `/dashboard` | Dashboard pengguna   |
+| GET    | `/game`      | Halaman game catur   |
+| GET    | `/admin`     | Panel admin Filament |
 
 ## Cara Menjalankan Project
 
