@@ -1,46 +1,36 @@
 /************************************************\
  ================================================
- 
+
                       WUKONG
               javascript chess engine
-           
+
                         by
-                        
+
                  Code Monkey King
- 
+
  ===============================================
 \************************************************/
 
-// chess engine object
 var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
     /****************************\
    ============================
-   
          GLOBAL CONSTANTS
-
-   ============================              
+   ============================
   \****************************/
 
-    // chess engine version
     const version = "1.5a";
     const elo = "1920";
 
-    // sides to move
-    const white = 0;
-    const black = 1;
-
-    // map "optimized" color to side to move
+    const white = 0,
+        black = 1;
     const mapColor = [0, 0, 0, 0, 0, 0, 0, 0, 1];
 
-    // piece types
-    const KING = 1;
-    const PAWN = 2;
-    const KNIGHT = 3;
-    const BISHOP = 4;
-    const ROOK = 5;
-    const QUEEN = 6;
-
-    // piece encoding
+    const KING = 1,
+        PAWN = 2,
+        KNIGHT = 3,
+        BISHOP = 4,
+        ROOK = 5,
+        QUEEN = 6;
     const P = 1,
         N = 2,
         B = 3,
@@ -53,16 +43,11 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         r = 10,
         q = 11,
         k = 12;
-
-    // map "optimized" piece codes to engine's piece codes
-    const mapFromOptimized = [0, K, P, N, B, R, Q, 0, 0, k, p, n, b, r, q];
-
-    // map board piece to "optimized" piece codes
-    const mapToOptimized = [0, 2, 3, 4, 5, 6, 1, 10, 11, 12, 13, 14, 9];
-
-    // empty square & offboard square
     const e = 0,
         o = 13;
+
+    const mapFromOptimized = [0, K, P, N, B, R, Q, 0, 0, k, p, n, b, r, q];
+    const mapToOptimized = [0, 2, 3, 4, 5, 6, 1, 10, 11, 12, 13, 14, 9];
 
     // square encoding
     const a8 = 0,
@@ -130,296 +115,53 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         g1 = 118,
         h1 = 119;
 
-    // offboard empassant square
     const noEnpassant = 120;
 
-    // array to convert board square indices to coordinates
+    // prettier-ignore
     const coordinates = [
-        "a8",
-        "b8",
-        "c8",
-        "d8",
-        "e8",
-        "f8",
-        "g8",
-        "h8",
-        "i8",
-        "j8",
-        "k8",
-        "l8",
-        "m8",
-        "n8",
-        "o8",
-        "p8",
-        "a7",
-        "b7",
-        "c7",
-        "d7",
-        "e7",
-        "f7",
-        "g7",
-        "h7",
-        "i7",
-        "j7",
-        "k7",
-        "l7",
-        "m7",
-        "n7",
-        "o7",
-        "p7",
-        "a6",
-        "b6",
-        "c6",
-        "d6",
-        "e6",
-        "f6",
-        "g6",
-        "h6",
-        "i6",
-        "j6",
-        "k6",
-        "l6",
-        "m6",
-        "n6",
-        "o6",
-        "p6",
-        "a5",
-        "b5",
-        "c5",
-        "d5",
-        "e5",
-        "f5",
-        "g5",
-        "h5",
-        "i5",
-        "j5",
-        "k5",
-        "l5",
-        "m5",
-        "n5",
-        "o5",
-        "p5",
-        "a4",
-        "b4",
-        "c4",
-        "d4",
-        "e4",
-        "f4",
-        "g4",
-        "h4",
-        "i4",
-        "j4",
-        "k4",
-        "l4",
-        "m4",
-        "n4",
-        "o4",
-        "p4",
-        "a3",
-        "b3",
-        "c3",
-        "d3",
-        "e3",
-        "f3",
-        "g3",
-        "h3",
-        "i3",
-        "j3",
-        "k3",
-        "l3",
-        "m3",
-        "n3",
-        "o3",
-        "p3",
-        "a2",
-        "b2",
-        "c2",
-        "d2",
-        "e2",
-        "f2",
-        "g2",
-        "h2",
-        "i2",
-        "j2",
-        "k2",
-        "l2",
-        "m2",
-        "n2",
-        "o2",
-        "p2",
-        "a1",
-        "b1",
-        "c1",
-        "d1",
-        "e1",
-        "f1",
-        "g1",
-        "h1",
-        "i1",
-        "j1",
-        "k1",
-        "l1",
-        "m1",
-        "n1",
-        "o1",
-        "p1",
-    ];
+    "a8","b8","c8","d8","e8","f8","g8","h8","i8","j8","k8","l8","m8","n8","o8","p8",
+    "a7","b7","c7","d7","e7","f7","g7","h7","i7","j7","k7","l7","m7","n7","o7","p7",
+    "a6","b6","c6","d6","e6","f6","g6","h6","i6","j6","k6","l6","m6","n6","o6","p6",
+    "a5","b5","c5","d5","e5","f5","g5","h5","i5","j5","k5","l5","m5","n5","o5","p5",
+    "a4","b4","c4","d4","e4","f4","g4","h4","i4","j4","k4","l4","m4","n4","o4","p4",
+    "a3","b3","c3","d3","e3","f3","g3","h3","i3","j3","k3","l3","m3","n3","o3","p3",
+    "a2","b2","c2","d2","e2","f2","g2","h2","i2","j2","k2","l2","m2","n2","o2","p2",
+    "a1","b1","c1","d1","e1","f1","g1","h1","i1","j1","k1","l1","m1","n1","o1","p1",
+  ];
 
     /****************************\
    ============================
-   
          BOARD DEFINITIONS
-
-   ============================              
+   ============================
   \****************************/
 
-    // starting position
     const startFen =
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ";
 
-    // 0x88 chess board representation
+    // prettier-ignore
     var board = [
-        r,
-        n,
-        b,
-        q,
-        k,
-        b,
-        n,
-        r,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        p,
-        p,
-        p,
-        p,
-        p,
-        p,
-        p,
-        p,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        e,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        P,
-        P,
-        P,
-        P,
-        P,
-        P,
-        P,
-        P,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        R,
-        N,
-        B,
-        Q,
-        K,
-        B,
-        N,
-        R,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-    ];
+    r,n,b,q,k,b,n,r, o,o,o,o,o,o,o,o,
+    p,p,p,p,p,p,p,p, o,o,o,o,o,o,o,o,
+    e,e,e,e,e,e,e,e, o,o,o,o,o,o,o,o,
+    e,e,e,e,e,e,e,e, o,o,o,o,o,o,o,o,
+    e,e,e,e,e,e,e,e, o,o,o,o,o,o,o,o,
+    e,e,e,e,e,e,e,e, o,o,o,o,o,o,o,o,
+    P,P,P,P,P,P,P,P, o,o,o,o,o,o,o,o,
+    R,N,B,Q,K,B,N,R, o,o,o,o,o,o,o,o,
+  ];
 
-    // chess board state variables
     var side = white;
     var enpassant = noEnpassant;
     var castle = 15;
     var fifty = 0;
     var hashKey = 0;
     var kingSquare = [e1, e8];
+    var moveStack = [];
+    var searchPly = 0;
+    var gamePly = 0;
+    var playerPower = "confused_pawn";
 
-    // piece list
     var pieceList = {
-        // piece counts
         [P]: 0,
         [N]: 0,
         [B]: 0,
@@ -432,103 +174,67 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         [r]: 0,
         [q]: 0,
         [k]: 0,
-
-        // list of pieces with associated squares
         pieces: new Array(13 * 10),
     };
 
-    // board move stack
-    var moveStack = [];
-
-    // plies
-    var searchPly = 0;
-    var gamePly = 0;
-    var playerPower = "confused_pawn";
-
     /****************************\
    ============================
-   
-      RANDOM NUMBER GENERATOR
-
-   ============================              
+         RANDOM NUMBER GENERATOR
+   ============================
   \****************************/
 
-    // fixed random seed
     var randomState = 1804289383;
 
-    // generate 32-bit pseudo legal numbers
     function random() {
-        var number = randomState;
-
-        // 32-bit XOR shift
-        number ^= number << 13;
-        number ^= number >> 17;
-        number ^= number << 5;
-        randomState = number;
-
-        return number;
+        var n = randomState;
+        n ^= n << 13;
+        n ^= n >> 17;
+        n ^= n << 5;
+        return (randomState = n);
     }
 
     /****************************\
    ============================
-   
-           ZOBRIST KEYS
-
-   ============================              
+         ZOBRIST KEYS
+   ============================
   \****************************/
 
-    // random keys
     var pieceKeys = new Array(13 * 128);
     var castleKeys = new Array(16);
     var sideKey;
 
-    // init random hash keys
     function initRandomKeys() {
-        for (var index = 0; index < 13 * 128; index++)
-            pieceKeys[index] = random();
-        for (var index = 0; index < 16; index++) castleKeys[index] = random();
+        for (var i = 0; i < 13 * 128; i++) pieceKeys[i] = random();
+        for (var i = 0; i < 16; i++) castleKeys[i] = random();
         sideKey = random();
     }
 
-    // generate hash key
     function generateHashKey() {
-        var finalKey = 0;
-
-        // hash board position
-        for (var square = 0; square < 128; square++) {
-            if ((square & 0x88) == 0) {
-                var piece = board[square];
-                if (piece != e) finalKey ^= pieceKeys[piece * 128 + square];
+        var key = 0;
+        for (var sq = 0; sq < 128; sq++) {
+            if (!(sq & 0x88)) {
+                var pc = board[sq];
+                if (pc !== e) key ^= pieceKeys[pc * 128 + sq];
             }
         }
-
-        // hash board state variables
-        if (side == white) finalKey ^= sideKey;
-        if (enpassant != noEnpassant) finalKey ^= pieceKeys[enpassant];
-        finalKey ^= castleKeys[castle];
-
-        return finalKey;
+        if (side === white) key ^= sideKey;
+        if (enpassant !== noEnpassant) key ^= pieceKeys[enpassant];
+        key ^= castleKeys[castle];
+        return key;
     }
 
     /****************************\
    ============================
-   
-           BOARD METHODS
-
-   ============================              
+         BOARD METHODS
+   ============================
   \****************************/
 
-    // reset board
     function resetBoard() {
-        // reset board position
-        for (var rank = 0; rank < 8; rank++) {
+        for (var rank = 0; rank < 8; rank++)
             for (var file = 0; file < 16; file++) {
-                var square = rank * 16 + file;
-                if ((square & 0x88) == 0) board[square] = e;
+                var sq = rank * 16 + file;
+                if (!(sq & 0x88)) board[sq] = e;
             }
-        }
-
-        // reset board state variables
         side = -1;
         enpassant = noEnpassant;
         castle = 0;
@@ -536,121 +242,73 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         hashKey = 0;
         kingSquare = [0, 0];
         moveStack = [];
-
-        // reset plies
         searchPly = 0;
         gamePly = 0;
-
-        // reset repetition table
-        for (let index in repetitionTable) repetitionTable[index] = 0;
+        for (let i in repetitionTable) repetitionTable[i] = 0;
     }
 
-    // init piece list
     function initPieceList() {
-        // reset piece counts
-        for (var piece = P; piece <= k; piece++) pieceList[piece] = 0;
-
-        // reset piece list
-        for (var index = 0; index < pieceList.pieces.length; index++)
-            pieceList.pieces[index] = 0;
-
-        // associate pieces with squares and count material
-        for (var square = 0; square < 128; square++) {
-            if ((square & 0x88) == 0) {
-                var piece = board[square];
-
-                if (piece) {
-                    pieceList.pieces[piece * 10 + pieceList[piece]] = square;
-                    pieceList[piece]++;
+        for (var pc = P; pc <= k; pc++) pieceList[pc] = 0;
+        for (var i = 0; i < pieceList.pieces.length; i++)
+            pieceList.pieces[i] = 0;
+        for (var sq = 0; sq < 128; sq++) {
+            if (!(sq & 0x88)) {
+                var pc = board[sq];
+                if (pc) {
+                    pieceList.pieces[pc * 10 + pieceList[pc]] = sq;
+                    pieceList[pc]++;
                 }
             }
         }
     }
 
-    // validate move
     function moveFromString(moveString) {
         let moveList = [];
         generateMoves(moveList);
-
-        // parse move string
-        var sourceSquare =
+        var src =
             moveString[0].charCodeAt() -
             "a".charCodeAt() +
             (8 - (moveString[1].charCodeAt() - "0".charCodeAt())) * 16;
-        var targetSquare =
+        var tgt =
             moveString[2].charCodeAt() -
             "a".charCodeAt() +
             (8 - (moveString[3].charCodeAt() - "0".charCodeAt())) * 16;
 
-        // validate
-        for (var count = 0; count < moveList.length; count++) {
-            var move = moveList[count].move;
-            var promotedPiece = 0;
-
-            if (
-                getMoveSource(move) == sourceSquare &&
-                getMoveTarget(move) == targetSquare
-            ) {
-                promotedPiece = getMovePromoted(move);
-
-                if (promotedPiece) {
-                    if (
-                        (promotedPiece == N || promotedPiece == n) &&
-                        moveString[4] == "n"
-                    )
-                        return move;
-                    else if (
-                        (promotedPiece == B || promotedPiece == b) &&
-                        moveString[4] == "b"
-                    )
-                        return move;
-                    else if (
-                        (promotedPiece == R || promotedPiece == r) &&
-                        moveString[4] == "r"
-                    )
-                        return move;
-                    else if (
-                        (promotedPiece == Q || promotedPiece == q) &&
-                        moveString[4] == "q"
-                    )
-                        return move;
+        for (var i = 0; i < moveList.length; i++) {
+            var mv = moveList[i].move;
+            if (getMoveSource(mv) === src && getMoveTarget(mv) === tgt) {
+                var promo = getMovePromoted(mv);
+                if (promo) {
+                    if ((promo === N || promo === n) && moveString[4] === "n")
+                        return mv;
+                    if ((promo === B || promo === b) && moveString[4] === "b")
+                        return mv;
+                    if ((promo === R || promo === r) && moveString[4] === "r")
+                        return mv;
+                    if ((promo === Q || promo === q) && moveString[4] === "q")
+                        return mv;
                     continue;
                 }
-
-                // legal move
-                return move;
+                return mv;
             }
         }
-
-        // illegal move
         return 0;
     }
 
     function setPlayerPower(power) {
-        if (
-            power == "blink_knight" ||
-            power == "super_rook" ||
-            power == "confused_pawn"
-        ) {
-            playerPower = power;
-        } else {
-            playerPower = "confused_pawn";
-        }
+        const valid = ["blink_knight", "super_rook", "confused_pawn"];
+        playerPower = valid.includes(power) ? power : "confused_pawn";
     }
-
     function getPlayerPower() {
         return playerPower;
     }
 
     /****************************\
    ============================
-   
-           MOVE OFFSETS
-
-   ============================              
+         MOVE OFFSETS
+   ============================
   \****************************/
 
-    // piece move offsets
     var knightOffsets = [33, 31, 18, 14, -33, -31, -18, -14];
     var blinkKnightOffsets = [
         33, 66, 31, 62, 18, 36, 14, 28, -33, -66, -31, -62, -18, -36, -14, -28,
@@ -666,915 +324,397 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         knightOffsets,
         bishopOffsets,
         rookOffsets,
-        kingOffsets, // Queen
+        kingOffsets,
     ];
 
     function getPawnDirections() {
-        let forward = -16 * (1 - 2 * side);
-
-        if (side == white && playerPower == "confused_pawn")
-            return [forward, -forward];
-        return [forward];
+        const fwd = -16 * (1 - 2 * side);
+        return side === white && playerPower === "confused_pawn"
+            ? [fwd, -fwd]
+            : [fwd];
     }
-
     function getKnightDirections() {
-        if (side == white && playerPower == "blink_knight")
-            return blinkKnightOffsets;
-        return knightOffsets;
+        return side === white && playerPower === "blink_knight"
+            ? blinkKnightOffsets
+            : knightOffsets;
     }
-
-    function getSuperRookDirections() {
-        if (side == white && playerPower == "super_rook") {
-            let forward = -16 * (1 - 2 * side);
-            return [forward - 1, forward + 1];
+    function getSuperRookDiagonals() {
+        if (side === white && playerPower === "super_rook") {
+            const fwd = -16 * (1 - 2 * side);
+            return [fwd - 1, fwd + 1];
         }
-
         return [];
     }
 
     /****************************\
    ============================
-   
-             ATTACKS
-
-   ============================              
+         ATTACKS
+   ============================
   \****************************/
 
-    // square attacked
     function isSquareAttacked(square, color) {
-        for (let pieceType = QUEEN; pieceType >= KING; pieceType--) {
-            let piece = pieceType | (color << 3);
-
-            // pawn attacks
-            if (pieceType == PAWN) {
-                let direction = 16 * (1 - 2 * color);
+        for (let pt = QUEEN; pt >= KING; pt--) {
+            const piece = pt | (color << 3);
+            if (pt === PAWN) {
+                const dir = 16 * (1 - 2 * color);
                 for (let lr = -1; lr <= 1; lr += 2) {
-                    let targetSquare = square + direction + lr;
-                    if (
-                        !(targetSquare & 0x88) &&
-                        board[targetSquare] == mapFromOptimized[piece]
-                    )
+                    const tgt = square + dir + lr;
+                    if (!(tgt & 0x88) && board[tgt] === mapFromOptimized[piece])
                         return true;
                 }
-            }
-
-            // piece attacks
-            else {
-                let slider = pieceType & 0x04;
-                let directions = pieceOffsets[pieceType];
-                for (let d = 0; d < directions.length; d++) {
-                    let targetSquare = square;
+            } else {
+                const slider = pt & 0x04;
+                const dirs = pieceOffsets[pt];
+                for (let d = 0; d < dirs.length; d++) {
+                    let tgt = square;
                     do {
-                        targetSquare += directions[d];
-                        if (targetSquare & 0x88) break;
-                        let targetPiece = board[targetSquare];
-                        if (targetPiece != e) {
-                            if (targetPiece == mapFromOptimized[piece])
-                                return true;
+                        tgt += dirs[d];
+                        if (tgt & 0x88) break;
+                        const tp = board[tgt];
+                        if (tp !== e) {
+                            if (tp === mapFromOptimized[piece]) return true;
                             break;
                         }
                     } while (slider);
                 }
             }
         }
-
         return false;
     }
 
     /****************************\
    ============================
-   
-          MOVE ENCODING
- 
-   ============================              
+         MOVE ENCODING
+   ============================
   \****************************/
 
-    // encode move
-    function encodeMove(
-        source,
-        target,
-        piece,
-        capture,
-        pawn,
-        enpassant,
-        castling,
-    ) {
+    function encodeMove(src, tgt, piece, capture, pawn, ep, castling) {
         return (
-            source |
-            (target << 7) |
+            src |
+            (tgt << 7) |
             (piece << 14) |
             (capture << 18) |
             (pawn << 19) |
-            (enpassant << 20) |
+            (ep << 20) |
             (castling << 21)
         );
     }
 
-    // decode move
-    function getMoveSource(move) {
-        return move & 0x7f;
+    function getMoveSource(mv) {
+        return mv & 0x7f;
     }
-    function getMoveTarget(move) {
-        return (move >> 7) & 0x7f;
+    function getMoveTarget(mv) {
+        return (mv >> 7) & 0x7f;
     }
-    function getMovePromoted(move) {
-        return (move >> 14) & 0xf;
+    function getMovePromoted(mv) {
+        return (mv >> 14) & 0xf;
     }
-    function getMoveCapture(move) {
-        return (move >> 18) & 0x1;
+    function getMoveCapture(mv) {
+        return (mv >> 18) & 0x1;
     }
-    function getMovePawn(move) {
-        return (move >> 19) & 0x1;
+    function getMovePawn(mv) {
+        return (mv >> 19) & 0x1;
     }
-    function getMoveEnpassant(move) {
-        return (move >> 20) & 0x1;
+    function getMoveEnpassant(mv) {
+        return (mv >> 20) & 0x1;
     }
-    function getMoveCastling(move) {
-        return (move >> 21) & 0x1;
+    function getMoveCastling(mv) {
+        return (mv >> 21) & 0x1;
     }
 
     /****************************\
    ============================
-   
-          MOVE GENERATOR
- 
-   ============================              
+         MOVE GENERATOR
+   ============================
   \****************************/
 
-    // ranks
     const pawnStartingRank = [0x60, 0x10];
     const pawnPromotingRank = [0x00, 0x70];
-
-    // castling side bits
     const castlingSide = [
         [1, 2],
         [4, 8],
     ];
 
-    // castling rights
+    // prettier-ignore
     const castlingRights = [
-        7,
-        15,
-        15,
-        15,
-        3,
-        15,
-        15,
-        11,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        15,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        13,
-        15,
-        15,
-        15,
-        12,
-        15,
-        15,
-        14,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-    ];
+     7,15,15,15, 3,15,15,11, o,o,o,o,o,o,o,o,
+    15,15,15,15,15,15,15,15, o,o,o,o,o,o,o,o,
+    15,15,15,15,15,15,15,15, o,o,o,o,o,o,o,o,
+    15,15,15,15,15,15,15,15, o,o,o,o,o,o,o,o,
+    15,15,15,15,15,15,15,15, o,o,o,o,o,o,o,o,
+    15,15,15,15,15,15,15,15, o,o,o,o,o,o,o,o,
+    15,15,15,15,15,15,15,15, o,o,o,o,o,o,o,o,
+    13,15,15,15,12,15,15,14, o,o,o,o,o,o,o,o,
+  ];
 
-    // populate move list
     function addMove(moveList, move) {
-        let moveScore = 0;
-
+        let score = 0;
         if (getMoveCapture(move)) {
-            moveScore =
+            score =
                 mvvLva[
                     board[getMoveSource(move)] * 13 + board[getMoveTarget(move)]
-                ];
-            moveScore += 10000;
+                ] + 10000;
         } else {
-            if (killerMoves[searchPly] == move) moveScore = 9000;
-            else if (killerMoves[maxPly + searchPly] == move) moveScore = 8000;
+            if (killerMoves[searchPly] === move) score = 9000;
+            else if (killerMoves[maxPly + searchPly] === move) score = 8000;
             else
-                moveScore =
+                score =
                     historyMoves[
                         board[getMoveSource(move)] * 128 + getMoveTarget(move)
                     ];
         }
-
-        moveList.push({
-            move: move,
-            score: moveScore,
-        });
+        moveList.push({ move, score });
     }
 
-    // generate moves
+    function _genPawnMoves(moveList, src, isCaptures) {
+        const dirs = getPawnDirections();
+        for (let di = 0; di < dirs.length; di++) {
+            const dir = dirs[di];
+            let tgt = src + dir;
+
+            if (!isCaptures && !(tgt & 0x88) && board[tgt] === e) {
+                if ((tgt & 0xf0) === pawnPromotingRank[side]) {
+                    for (let pp = QUEEN; pp >= KNIGHT; pp--)
+                        addMove(
+                            moveList,
+                            encodeMove(
+                                src,
+                                tgt,
+                                mapFromOptimized[pp | (side << 3)],
+                                0,
+                                0,
+                                0,
+                                0,
+                            ),
+                        );
+                } else {
+                    addMove(moveList, encodeMove(src, tgt, 0, 0, 0, 0, 0));
+                    if (di === 0 && (src & 0xf0) === pawnStartingRank[side]) {
+                        const dbl = src + dir * 2;
+                        if (!(dbl & 0x88) && board[dbl] === e)
+                            addMove(
+                                moveList,
+                                encodeMove(src, dbl, 0, 0, 1, 0, 0),
+                            );
+                    }
+                }
+            }
+
+            for (let lr = -1; lr <= 1; lr += 2) {
+                tgt = src + dir + lr;
+                if (tgt & 0x88) continue;
+                const tp = mapToOptimized[board[tgt]];
+                if (tp !== e && mapColor[tp & 0x08] !== side) {
+                    if ((tgt & 0xf0) === pawnPromotingRank[side]) {
+                        for (let pp = QUEEN; pp >= KNIGHT; pp--)
+                            addMove(
+                                moveList,
+                                encodeMove(
+                                    src,
+                                    tgt,
+                                    mapFromOptimized[pp | (side << 3)],
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                ),
+                            );
+                    } else {
+                        addMove(moveList, encodeMove(src, tgt, 0, 1, 0, 0, 0));
+                    }
+                }
+                if (tgt === enpassant)
+                    addMove(moveList, encodeMove(src, tgt, 0, 1, 0, 1, 0));
+            }
+        }
+    }
+
+    function _genPieceMoves(moveList, src, pt, isCaptures) {
+        const slider = pt & 0x04;
+        let dirs = pieceOffsets[pt];
+        if (pt === KNIGHT) dirs = getKnightDirections();
+        else if (pt === ROOK && side === white && playerPower === "super_rook")
+            dirs = rookOffsets;
+
+        for (let d = 0; d < dirs.length; d++) {
+            let tgt = src;
+            do {
+                tgt += dirs[d];
+                if (tgt & 0x88) break;
+                const tp = mapToOptimized[board[tgt]];
+                if (tp !== e) {
+                    if (mapColor[tp & 0x08] !== side)
+                        addMove(moveList, encodeMove(src, tgt, 0, 1, 0, 0, 0));
+                    break;
+                }
+                if (!isCaptures)
+                    addMove(moveList, encodeMove(src, tgt, 0, 0, 0, 0, 0));
+            } while (slider);
+        }
+
+        // super rook diagonal bonus (1 step)
+        if (pt === ROOK && side === white && playerPower === "super_rook") {
+            for (const offset of getSuperRookDiagonals()) {
+                const tgt = src + offset;
+                if (tgt & 0x88) continue;
+                const tp = mapToOptimized[board[tgt]];
+                if (tp !== e) {
+                    if (mapColor[tp & 0x08] !== side)
+                        addMove(moveList, encodeMove(src, tgt, 0, 1, 0, 0, 0));
+                } else if (!isCaptures) {
+                    addMove(moveList, encodeMove(src, tgt, 0, 0, 0, 0, 0));
+                }
+            }
+        }
+    }
+
+    function _genCastling(moveList) {
+        const ks = kingSquare[side];
+        if (
+            castle & castlingSide[side][0] &&
+            board[ks + 1] === e &&
+            board[ks + 2] === e &&
+            !isSquareAttacked(ks, 1 - side) &&
+            !isSquareAttacked(ks + 1, 1 - side)
+        )
+            addMove(moveList, encodeMove(ks, ks + 2, 0, 0, 0, 0, 1));
+        if (
+            castle & castlingSide[side][1] &&
+            board[ks - 1] === e &&
+            board[ks - 2] === e &&
+            board[ks - 3] === e &&
+            !isSquareAttacked(ks, 1 - side) &&
+            !isSquareAttacked(ks - 1, 1 - side)
+        )
+            addMove(moveList, encodeMove(ks, ks - 2, 0, 0, 0, 0, 1));
+    }
+
+    function _iteratePieces(moveList, isCaptures) {
+        for (let pc = P; pc <= k; pc++) {
+            for (let pi = 0; pi < pieceList[pc]; pi++) {
+                const src = pieceList.pieces[pc * 10 + pi];
+                const opt = mapToOptimized[board[src]];
+                const pt = opt & 0x07;
+                if (mapColor[opt & 0x08] !== side) continue;
+                if (pt === PAWN) _genPawnMoves(moveList, src, isCaptures);
+                if (pt === KING && !isCaptures) _genCastling(moveList);
+                if (pt !== PAWN) _genPieceMoves(moveList, src, pt, isCaptures);
+            }
+        }
+    }
+
     function generateMoves(moveList) {
-        for (let piece = P; piece <= k; piece++) {
-            for (
-                let pieceIndex = 0;
-                pieceIndex < pieceList[piece];
-                pieceIndex++
-            ) {
-                let sourceSquare = pieceList.pieces[piece * 10 + pieceIndex];
-                let optimizedPiece = mapToOptimized[board[sourceSquare]];
-                let pieceType = optimizedPiece & 0x07;
-
-                if (mapColor[optimizedPiece & 0x08] == side) {
-                    // pawns
-                    if (pieceType == PAWN) {
-                        let pawnDirections = getPawnDirections();
-
-                        for (
-                            let dirIndex = 0;
-                            dirIndex < pawnDirections.length;
-                            dirIndex++
-                        ) {
-                            let direction = pawnDirections[dirIndex];
-                            let targetSquare = sourceSquare + direction;
-
-                            // quiet moves
-                            if (
-                                (targetSquare & 0x88) == 0 &&
-                                board[targetSquare] == e
-                            ) {
-                                if (
-                                    (targetSquare & 0xf0) ==
-                                    pawnPromotingRank[side]
-                                ) {
-                                    for (
-                                        let promotedPiece = QUEEN;
-                                        promotedPiece >= KNIGHT;
-                                        promotedPiece--
-                                    )
-                                        addMove(
-                                            moveList,
-                                            encodeMove(
-                                                sourceSquare,
-                                                targetSquare,
-                                                mapFromOptimized[
-                                                    promotedPiece | (side << 3)
-                                                ],
-                                                0,
-                                                0,
-                                                0,
-                                                0,
-                                            ),
-                                        );
-                                } else {
-                                    addMove(
-                                        moveList,
-                                        encodeMove(
-                                            sourceSquare,
-                                            targetSquare,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                        ),
-                                    );
-
-                                    if (
-                                        dirIndex == 0 &&
-                                        (sourceSquare & 0xf0) ==
-                                            pawnStartingRank[side]
-                                    ) {
-                                        let doubleTarget =
-                                            sourceSquare + direction * 2;
-
-                                        if (
-                                            (doubleTarget & 0x88) == 0 &&
-                                            board[doubleTarget] == e
-                                        )
-                                            addMove(
-                                                moveList,
-                                                encodeMove(
-                                                    sourceSquare,
-                                                    doubleTarget,
-                                                    0,
-                                                    0,
-                                                    1,
-                                                    0,
-                                                    0,
-                                                ),
-                                            );
-                                    }
-                                }
-                            }
-
-                            // captures
-                            for (let lr = -1; lr <= 1; lr += 2) {
-                                targetSquare = sourceSquare + direction + lr;
-                                if (targetSquare & 0x88) continue;
-                                let targetPiece =
-                                    mapToOptimized[board[targetSquare]];
-
-                                if (
-                                    targetPiece != e &&
-                                    mapColor[targetPiece & 0x08] != side
-                                ) {
-                                    if (
-                                        (targetSquare & 0xf0) ==
-                                        pawnPromotingRank[side]
-                                    ) {
-                                        for (
-                                            let promotedPiece = QUEEN;
-                                            promotedPiece >= KNIGHT;
-                                            promotedPiece--
-                                        )
-                                            addMove(
-                                                moveList,
-                                                encodeMove(
-                                                    sourceSquare,
-                                                    targetSquare,
-                                                    mapFromOptimized[
-                                                        promotedPiece |
-                                                            (side << 3)
-                                                    ],
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                ),
-                                            );
-                                    } else
-                                        addMove(
-                                            moveList,
-                                            encodeMove(
-                                                sourceSquare,
-                                                targetSquare,
-                                                0,
-                                                1,
-                                                0,
-                                                0,
-                                                0,
-                                            ),
-                                        );
-                                }
-
-                                if (targetSquare == enpassant)
-                                    addMove(
-                                        moveList,
-                                        encodeMove(
-                                            sourceSquare,
-                                            targetSquare,
-                                            0,
-                                            1,
-                                            0,
-                                            1,
-                                            0,
-                                        ),
-                                    );
-                            }
-                        }
-                    }
-
-                    // castling
-                    else if (pieceType == KING) {
-                        let ks = kingSquare[side];
-
-                        // king side
-                        if (castle & castlingSide[side][0]) {
-                            if (board[ks + 1] == e && board[ks + 2] == e) {
-                                if (
-                                    isSquareAttacked(ks, 1 - side) == 0 &&
-                                    isSquareAttacked(ks + 1, 1 - side) == 0
-                                )
-                                    addMove(
-                                        moveList,
-                                        encodeMove(ks, ks + 2, 0, 0, 0, 0, 1),
-                                    );
-                            }
-                        }
-
-                        // queen side
-                        if (castle & castlingSide[side][1]) {
-                            if (
-                                board[ks - 1] == e &&
-                                board[ks - 2] == e &&
-                                board[ks - 3] == e
-                            ) {
-                                if (
-                                    isSquareAttacked(ks, 1 - side) == 0 &&
-                                    isSquareAttacked(ks - 1, 1 - side) == 0
-                                )
-                                    addMove(
-                                        moveList,
-                                        encodeMove(ks, ks - 2, 0, 0, 0, 0, 1),
-                                    );
-                            }
-                        }
-                    }
-
-                    // pieces
-                    if (pieceType != PAWN) {
-                        let slider = pieceType & 0x04;
-                        let directions = pieceOffsets[pieceType];
-
-                        if (pieceType == KNIGHT)
-                            directions = getKnightDirections();
-                        else if (
-                            pieceType == ROOK &&
-                            side == white &&
-                            playerPower == "super_rook"
-                        )
-                            directions = rookOffsets;
-
-                        for (let d = 0; d < directions.length; d++) {
-                            let targetSquare = sourceSquare;
-
-                            do {
-                                targetSquare += directions[d];
-                                if (targetSquare & 0x88) break;
-                                let targetPiece =
-                                    mapToOptimized[board[targetSquare]];
-                                if (targetPiece != e) {
-                                    if (mapColor[targetPiece & 0x08] != side)
-                                        addMove(
-                                            moveList,
-                                            encodeMove(
-                                                sourceSquare,
-                                                targetSquare,
-                                                0,
-                                                1,
-                                                0,
-                                                0,
-                                                0,
-                                            ),
-                                        );
-
-                                    break;
-                                }
-
-                                addMove(
-                                    moveList,
-                                    encodeMove(
-                                        sourceSquare,
-                                        targetSquare,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                        0,
-                                    ),
-                                );
-                            } while (slider);
-                        }
-
-                        if (
-                            pieceType == ROOK &&
-                            side == white &&
-                            playerPower == "super_rook"
-                        ) {
-                            let diagonalTargets = getSuperRookDirections();
-
-                            for (
-                                let extra = 0;
-                                extra < diagonalTargets.length;
-                                extra++
-                            ) {
-                                let targetSquare =
-                                    sourceSquare + diagonalTargets[extra];
-                                if (targetSquare & 0x88) continue;
-
-                                let targetPiece =
-                                    mapToOptimized[board[targetSquare]];
-                                if (targetPiece != e) {
-                                    if (mapColor[targetPiece & 0x08] != side)
-                                        addMove(
-                                            moveList,
-                                            encodeMove(
-                                                sourceSquare,
-                                                targetSquare,
-                                                0,
-                                                1,
-                                                0,
-                                                0,
-                                                0,
-                                            ),
-                                        );
-                                } else {
-                                    addMove(
-                                        moveList,
-                                        encodeMove(
-                                            sourceSquare,
-                                            targetSquare,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                        ),
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        _iteratePieces(moveList, false);
     }
-
-    // generate captures
     function generateCaptures(moveList) {
-        for (let piece = P; piece <= k; piece++) {
-            for (
-                let pieceIndex = 0;
-                pieceIndex < pieceList[piece];
-                pieceIndex++
-            ) {
-                let sourceSquare = pieceList.pieces[piece * 10 + pieceIndex];
-                let optimizedPiece = mapToOptimized[board[sourceSquare]];
-                let pieceType = optimizedPiece & 0x07;
-
-                if (mapColor[optimizedPiece & 0x08] == side) {
-                    // pawns
-                    if (pieceType == PAWN) {
-                        let pawnDirections = getPawnDirections();
-
-                        for (
-                            let dirIndex = 0;
-                            dirIndex < pawnDirections.length;
-                            dirIndex++
-                        ) {
-                            let direction = pawnDirections[dirIndex];
-                            let targetSquare = sourceSquare + direction;
-
-                            // captures
-                            for (let lr = -1; lr <= 1; lr += 2) {
-                                targetSquare = sourceSquare + direction + lr;
-                                if (targetSquare & 0x88) continue;
-                                let targetPiece =
-                                    mapToOptimized[board[targetSquare]];
-
-                                if (
-                                    targetPiece != e &&
-                                    mapColor[targetPiece & 0x08] != side
-                                ) {
-                                    if (
-                                        (targetSquare & 0xf0) ==
-                                        pawnPromotingRank[side]
-                                    ) {
-                                        for (
-                                            let promotedPiece = QUEEN;
-                                            promotedPiece >= KNIGHT;
-                                            promotedPiece--
-                                        )
-                                            addMove(
-                                                moveList,
-                                                encodeMove(
-                                                    sourceSquare,
-                                                    targetSquare,
-                                                    mapFromOptimized[
-                                                        promotedPiece |
-                                                            (side << 3)
-                                                    ],
-                                                    1,
-                                                    0,
-                                                    0,
-                                                    0,
-                                                ),
-                                            );
-                                    } else
-                                        addMove(
-                                            moveList,
-                                            encodeMove(
-                                                sourceSquare,
-                                                targetSquare,
-                                                0,
-                                                1,
-                                                0,
-                                                0,
-                                                0,
-                                            ),
-                                        );
-                                }
-
-                                if (targetSquare == enpassant)
-                                    addMove(
-                                        moveList,
-                                        encodeMove(
-                                            sourceSquare,
-                                            targetSquare,
-                                            0,
-                                            1,
-                                            0,
-                                            1,
-                                            0,
-                                        ),
-                                    );
-                            }
-                        }
-                    }
-
-                    // pieces
-                    if (pieceType != PAWN) {
-                        let slider = pieceType & 0x04;
-                        let directions = pieceOffsets[pieceType];
-
-                        if (pieceType == KNIGHT)
-                            directions = getKnightDirections();
-                        else if (
-                            pieceType == ROOK &&
-                            side == white &&
-                            playerPower == "super_rook"
-                        )
-                            directions = rookOffsets;
-
-                        for (let d = 0; d < directions.length; d++) {
-                            let targetSquare = sourceSquare;
-
-                            do {
-                                targetSquare += directions[d];
-                                if (targetSquare & 0x88) break;
-                                let targetPiece =
-                                    mapToOptimized[board[targetSquare]];
-                                if (targetPiece != e) {
-                                    if (mapColor[targetPiece & 0x08] != side)
-                                        addMove(
-                                            moveList,
-                                            encodeMove(
-                                                sourceSquare,
-                                                targetSquare,
-                                                0,
-                                                1,
-                                                0,
-                                                0,
-                                                0,
-                                            ),
-                                        );
-
-                                    break;
-                                }
-                            } while (slider);
-                        }
-
-                        if (
-                            pieceType == ROOK &&
-                            side == white &&
-                            playerPower == "super_rook"
-                        ) {
-                            let diagonalTargets = getSuperRookDirections();
-
-                            for (
-                                let extra = 0;
-                                extra < diagonalTargets.length;
-                                extra++
-                            ) {
-                                let targetSquare =
-                                    sourceSquare + diagonalTargets[extra];
-                                if (targetSquare & 0x88) continue;
-
-                                let targetPiece =
-                                    mapToOptimized[board[targetSquare]];
-                                if (
-                                    targetPiece != e &&
-                                    mapColor[targetPiece & 0x08] != side
-                                )
-                                    addMove(
-                                        moveList,
-                                        encodeMove(
-                                            sourceSquare,
-                                            targetSquare,
-                                            0,
-                                            1,
-                                            0,
-                                            0,
-                                            0,
-                                        ),
-                                    );
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        _iteratePieces(moveList, true);
     }
 
-    // generate only legal moves
     function generateLegalMoves() {
-        let legalMoves = [];
-        let moveList = [];
-
+        let legal = [],
+            all = [];
         clearSearch();
-        generateMoves(moveList);
-
-        for (let count = 0; count < moveList.length; count++) {
-            if (makeMove(moveList[count].move) == 0) continue;
-            legalMoves.push(moveList[count]);
+        generateMoves(all);
+        for (let i = 0; i < all.length; i++) {
+            if (!makeMove(all[i].move)) continue;
+            legal.push(all[i]);
             takeBack();
         }
-
-        return legalMoves;
+        return legal;
     }
 
-    // move piece on board
-    function moveCurrentPiece(piece, sourceSquare, targetSquare) {
-        board[targetSquare] = board[sourceSquare];
-        board[sourceSquare] = e;
-        hashKey ^= pieceKeys[piece * 128 + sourceSquare];
-        hashKey ^= pieceKeys[piece * 128 + targetSquare];
+    /****************************\
+   ============================
+         PIECE MANIPULATION
+   ============================
+  \****************************/
 
-        for (let pieceIndex = 0; pieceIndex < pieceList[piece]; pieceIndex++) {
-            if (pieceList.pieces[piece * 10 + pieceIndex] == sourceSquare) {
-                pieceList.pieces[piece * 10 + pieceIndex] = targetSquare;
+    function moveCurrentPiece(pc, src, tgt) {
+        board[tgt] = board[src];
+        board[src] = e;
+        hashKey ^= pieceKeys[pc * 128 + src] ^ pieceKeys[pc * 128 + tgt];
+        for (let i = 0; i < pieceList[pc]; i++) {
+            if (pieceList.pieces[pc * 10 + i] === src) {
+                pieceList.pieces[pc * 10 + i] = tgt;
                 break;
             }
         }
     }
 
-    // remove piece from board
-    function removePiece(piece, square) {
-        for (let pieceIndex = 0; pieceIndex < pieceList[piece]; pieceIndex++) {
-            if (pieceList.pieces[piece * 10 + pieceIndex] == square) {
-                var capturedIndex = pieceIndex;
+    function removePiece(pc, sq) {
+        let idx;
+        for (let i = 0; i < pieceList[pc]; i++)
+            if (pieceList.pieces[pc * 10 + i] === sq) {
+                idx = i;
                 break;
             }
-        }
-
-        pieceList[piece]--;
-        pieceList.pieces[piece * 10 + capturedIndex] =
-            pieceList.pieces[piece * 10 + pieceList[piece]];
+        pieceList[pc]--;
+        pieceList.pieces[pc * 10 + idx] =
+            pieceList.pieces[pc * 10 + pieceList[pc]];
     }
 
-    // add piece to board
-    function addPiece(piece, square) {
-        board[square] = piece;
-        hashKey ^= pieceKeys[piece * 128 + square];
-        pieceList.pieces[piece * 10 + pieceList[piece]] = square;
-        pieceList[piece]++;
+    function addPiece(pc, sq) {
+        board[sq] = pc;
+        hashKey ^= pieceKeys[pc * 128 + sq];
+        pieceList.pieces[pc * 10 + pieceList[pc]] = sq;
+        pieceList[pc]++;
     }
 
-    // make move
+    /****************************\
+   ============================
+         MAKE / TAKE MOVE
+   ============================
+  \****************************/
+
     function makeMove(move) {
-        // update plies
         searchPly++;
         gamePly++;
-
-        // update repetition table
         repetitionTable[gamePly] = hashKey;
 
-        // parse move
-        let sourceSquare = getMoveSource(move);
-        let targetSquare = getMoveTarget(move);
-        let promotedPiece = getMovePromoted(move);
-        let capturedPiece = board[targetSquare];
+        const src = getMoveSource(move);
+        const tgt = getMoveTarget(move);
+        const promo = getMovePromoted(move);
+        const capPiece = board[tgt];
 
-        // moveStack board state variables
         moveStack.push({
-            move: move,
+            move,
             capturedPiece: 0,
-            side: side,
-            enpassant: enpassant,
-            castle: castle,
-            fifty: fifty,
+            side,
+            enpassant,
+            castle,
+            fifty,
             hash: hashKey,
         });
-
-        // move piece
-        moveCurrentPiece(board[sourceSquare], sourceSquare, targetSquare);
-
-        // update 50 move rule
+        moveCurrentPiece(board[src], src, tgt);
         fifty++;
 
-        // handle capture
         if (getMoveCapture(move)) {
-            if (capturedPiece) {
-                moveStack[moveStack.length - 1].capturedPiece = capturedPiece;
-                hashKey ^= pieceKeys[capturedPiece * 128 + targetSquare];
-                removePiece(capturedPiece, targetSquare);
+            if (capPiece) {
+                moveStack[moveStack.length - 1].capturedPiece = capPiece;
+                hashKey ^= pieceKeys[capPiece * 128 + tgt];
+                removePiece(capPiece, tgt);
             }
             fifty = 0;
-        } else if (board[targetSquare] == P || board[targetSquare] == p)
-            fifty = 0;
+        } else if (board[tgt] === P || board[tgt] === p) fifty = 0;
 
-        // update enpassant square
-        if (enpassant != noEnpassant) hashKey ^= pieceKeys[enpassant];
+        if (enpassant !== noEnpassant) hashKey ^= pieceKeys[enpassant];
         enpassant = noEnpassant;
 
-        // handle special moves
         if (getMovePawn(move)) {
-            if (side == white) {
-                enpassant = targetSquare + 16;
-                hashKey ^= pieceKeys[targetSquare + 16];
-            } else {
-                enpassant = targetSquare - 16;
-                hashKey ^= pieceKeys[targetSquare - 16];
-            }
+            enpassant = side === white ? tgt + 16 : tgt - 16;
+            hashKey ^= pieceKeys[enpassant];
         } else if (getMoveEnpassant(move)) {
-            if (side == white) {
-                board[targetSquare + 16] = e;
-                hashKey ^= pieceKeys[p * 128 + targetSquare + 16];
-                removePiece(p, targetSquare + 16);
+            if (side === white) {
+                board[tgt + 16] = e;
+                hashKey ^= pieceKeys[p * 128 + tgt + 16];
+                removePiece(p, tgt + 16);
             } else {
-                board[targetSquare - 16] = e;
-                hashKey ^= pieceKeys[P * 128 + (targetSquare - 16)];
-                removePiece(P, targetSquare - 16);
+                board[tgt - 16] = e;
+                hashKey ^= pieceKeys[P * 128 + (tgt - 16)];
+                removePiece(P, tgt - 16);
             }
         } else if (getMoveCastling(move)) {
-            switch (targetSquare) {
+            switch (tgt) {
                 case g1:
                     moveCurrentPiece(R, h1, f1);
                     break;
@@ -1590,67 +730,50 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             }
         }
 
-        // handle promotions
-        if (promotedPiece) {
-            if (side == white) {
-                hashKey ^= pieceKeys[P * 128 + targetSquare];
-                removePiece(P, targetSquare);
+        if (promo) {
+            if (side === white) {
+                hashKey ^= pieceKeys[P * 128 + tgt];
+                removePiece(P, tgt);
             } else {
-                hashKey ^= pieceKeys[p * 128 + targetSquare];
-                removePiece(p, targetSquare);
+                hashKey ^= pieceKeys[p * 128 + tgt];
+                removePiece(p, tgt);
             }
-
-            addPiece(promotedPiece, targetSquare);
+            addPiece(promo, tgt);
         }
 
-        // update king square
-        if (board[targetSquare] == K || board[targetSquare] == k)
-            kingSquare[side] = targetSquare;
+        if (board[tgt] === K || board[tgt] === k) kingSquare[side] = tgt;
 
-        // update castling rights
         hashKey ^= castleKeys[castle];
-        castle &= castlingRights[sourceSquare];
-        castle &= castlingRights[targetSquare];
+        castle &= castlingRights[src];
+        castle &= castlingRights[tgt];
         hashKey ^= castleKeys[castle];
 
-        // switch side to move
         side ^= 1;
         hashKey ^= sideKey;
 
-        // return illegal move if king is left in check
         if (isSquareAttacked(kingSquare[side ^ 1], side)) {
             takeBack();
             return 0;
-        } else return 1;
+        }
+        return 1;
     }
 
-    // take move back
     function takeBack() {
-        // update plies
         searchPly--;
         gamePly--;
+        const top = moveStack.length - 1;
+        const move = moveStack[top].move;
+        const src = getMoveSource(move);
+        const tgt = getMoveTarget(move);
 
-        // parse move
-        let moveIndex = moveStack.length - 1;
-        let move = moveStack[moveIndex].move;
-        let sourceSquare = getMoveSource(move);
-        let targetSquare = getMoveTarget(move);
+        moveCurrentPiece(board[tgt], tgt, src);
 
-        // move piece
-        moveCurrentPiece(board[targetSquare], targetSquare, sourceSquare);
-
-        // restore captured piece
-        if (getMoveCapture(move)) {
-            //board[targetSquare] = moveStack[moveIndex].capturedPiece;
-            addPiece(moveStack[moveIndex].capturedPiece, targetSquare);
-        }
-
-        // handle special moves
+        if (getMoveCapture(move)) addPiece(moveStack[top].capturedPiece, tgt);
         if (getMoveEnpassant(move)) {
-            if (side == white) addPiece(P, targetSquare - 16);
-            else addPiece(p, targetSquare + 16);
+            if (side === white) addPiece(P, tgt - 16);
+            else addPiece(p, tgt + 16);
         } else if (getMoveCastling(move)) {
-            switch (targetSquare) {
+            switch (tgt) {
                 case g1:
                     moveCurrentPiece(R, f1, h1);
                     break;
@@ -1665,137 +788,94 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
                     break;
             }
         } else if (getMovePromoted(move)) {
-            side == white
-                ? addPiece(p, sourceSquare)
-                : addPiece(P, sourceSquare);
-            removePiece(getMovePromoted(move), sourceSquare);
+            side === white ? addPiece(p, src) : addPiece(P, src);
+            removePiece(getMovePromoted(move), src);
         }
 
-        // update king square
-        if (board[sourceSquare] == K || board[sourceSquare] == k)
-            kingSquare[side ^ 1] = sourceSquare;
+        if (board[src] === K || board[src] === k) kingSquare[side ^ 1] = src;
 
-        // switch side to move
-        side = moveStack[moveIndex].side;
-
-        // restore board state variables
-        enpassant = moveStack[moveIndex].enpassant;
-        castle = moveStack[moveIndex].castle;
-        hashKey = moveStack[moveIndex].hash;
-        fifty = moveStack[moveIndex].fifty;
-
+        side = moveStack[top].side;
+        enpassant = moveStack[top].enpassant;
+        castle = moveStack[top].castle;
+        hashKey = moveStack[top].hash;
+        fifty = moveStack[top].fifty;
         moveStack.pop();
     }
 
-    // make null move
     function makeNullMove() {
-        // backup current board state
         moveStack.push({
             move: 0,
             capturedPiece: 0,
-            side: side,
-            enpassant: enpassant,
-            castle: castle,
-            fifty: fifty,
+            side,
+            enpassant,
+            castle,
+            fifty,
             hash: hashKey,
         });
-
-        if (enpassant != noEnpassant) hashKey ^= pieceKeys[enpassant];
+        if (enpassant !== noEnpassant) hashKey ^= pieceKeys[enpassant];
         enpassant = noEnpassant;
-
         fifty = 0;
         side ^= 1;
         hashKey ^= sideKey;
     }
 
-    // take null move
     function takeNullMove() {
-        // restore board state
-        side = moveStack[moveStack.length - 1].side;
-        enpassant = moveStack[moveStack.length - 1].enpassant;
-        castle = moveStack[moveStack.length - 1].castle;
-        fifty = moveStack[moveStack.length - 1].fifty;
-        hashKey = moveStack[moveStack.length - 1].hash;
+        const top = moveStack[moveStack.length - 1];
+        side = top.side;
+        enpassant = top.enpassant;
+        castle = top.castle;
+        fifty = top.fifty;
+        hashKey = top.hash;
         moveStack.pop();
     }
 
     /****************************\
    ============================
-   
-              PERFT
-
-   ============================              
+         PERFT
+   ============================
   \****************************/
 
-    // visited nodes count
     var nodes = 0;
 
-    // perft driver
     function perftDriver(depth) {
-        if (depth == 0) {
+        if (depth === 0) {
             nodes++;
             return;
         }
-
-        let moveList = [];
-        generateMoves(moveList);
-
-        for (var count = 0; count < moveList.length; count++) {
-            if (!makeMove(moveList[count].move)) continue;
+        const ml = [];
+        generateMoves(ml);
+        for (let i = 0; i < ml.length; i++) {
+            if (!makeMove(ml[i].move)) continue;
             perftDriver(depth - 1);
             takeBack();
         }
     }
 
-    // perft test
     function perftTest(depth) {
         nodes = 0;
         console.log("   Performance test:\n");
-        resultString = "";
-        let startTime = Date.now();
-
-        let moveList = [];
-        generateMoves(moveList);
-
-        for (var count = 0; count < moveList.length; count++) {
-            if (!makeMove(moveList[count].move)) continue;
-            let cumNodes = nodes;
+        let result = "";
+        const start = Date.now();
+        const ml = [];
+        generateMoves(ml);
+        for (let i = 0; i < ml.length; i++) {
+            if (!makeMove(ml[i].move)) continue;
+            const before = nodes;
             perftDriver(depth - 1);
             takeBack();
-            let oldNodes = nodes - cumNodes;
             console.log(
-                "   move" +
-                    " " +
-                    (count + 1) +
-                    (count < 9 ? ":  " : ": ") +
-                    coordinates[getMoveSource(moveList[count].move)] +
-                    coordinates[getMoveTarget(moveList[count].move)] +
-                    (getMovePromoted(moveList[count].move)
-                        ? promotedPieces[getMovePromoted(moveList[count].move)]
-                        : " ") +
-                    "    nodes: " +
-                    oldNodes,
+                `   move ${i + 1}${i < 9 ? ":  " : ": "}${coordinates[getMoveSource(ml[i].move)]}${coordinates[getMoveTarget(ml[i].move)]}${getMovePromoted(ml[i].move) ? promotedPieces[getMovePromoted(ml[i].move)] : " "}    nodes: ${nodes - before}`,
             );
         }
-
-        resultString += "\n   Depth: " + depth;
-        resultString += "\n   Nodes: " + nodes;
-        resultString += "\n    Time: " + (Date.now() - startTime) + " ms\n";
-        console.log(resultString);
+        result += `\n   Depth: ${depth}\n   Nodes: ${nodes}\n    Time: ${Date.now() - start} ms\n`;
+        console.log(result);
     }
 
     /****************************\
    ============================
-   
-            EVALUATION
-
-   ============================              
+         EVALUATION
+   ============================
   \****************************/
-
-    /*
-       Following material weights and PST values are obtained
-      using a mixture of supervised and reinforcement learning
-  */
 
     const opening = 0,
         endgame = 1,
@@ -1809,2367 +889,567 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
     const openingPhaseScore = 5900;
     const endgamePhaseScore = 500;
 
-    // material score
+    // prettier-ignore
     const materialWeights = [
-        // opening material score
-        [0, 89, 308, 319, 488, 888, 20001, -92, -307, -323, -492, -888, -20002],
+    [0,  89,  308,  319,  488,  888,  20001, -92, -307, -323, -492, -888, -20002],  // opening
+    [0,  96,  319,  331,  497,  853,  19998, -102,-318, -334, -501, -845, -20000],  // endgame
+  ];
 
-        // endgame material score
-        [
-            0, 96, 319, 331, 497, 853, 19998, -102, -318, -334, -501, -845,
-            -20000,
-        ],
-    ];
-
-    // piece-square tables
+    // prettier-ignore
     const pst = [
-        // opening phase scores
-        [
-            // pawn
-            [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                68,
-                61,
-                47,
-                47,
-                49,
-                45,
-                -1,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                6,
-                16,
-                25,
-                33,
-                24,
-                24,
-                14,
-                -6,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                0,
-                -1,
-                9,
-                28,
-                20,
-                8,
-                -1,
-                11,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                6,
-                4,
-                6,
-                14,
-                14,
-                -5,
-                6,
-                -6,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -1,
-                -8,
-                -4,
-                4,
-                2,
-                -12,
-                -1,
-                5,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                5,
-                16,
-                16,
-                -14,
-                -14,
-                13,
-                15,
-                8,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
+    [ // opening
+      [ // pawn
+        0,0,0,0,0,0,0,0,             o,o,o,o,o,o,o,o,
+        -4,68,61,47,47,49,45,-1,     o,o,o,o,o,o,o,o,
+        6,16,25,33,24,24,14,-6,      o,o,o,o,o,o,o,o,
+        0,-1,9,28,20,8,-1,11,        o,o,o,o,o,o,o,o,
+        6,4,6,14,14,-5,6,-6,         o,o,o,o,o,o,o,o,
+        -1,-8,-4,4,2,-12,-1,5,       o,o,o,o,o,o,o,o,
+        5,16,16,-14,-14,13,15,8,     o,o,o,o,o,o,o,o,
+        0,0,0,0,0,0,0,0,             o,o,o,o,o,o,o,o,
+      ],
+      [ // knight
+        -55,-40,-30,-28,-26,-30,-40,-50, o,o,o,o,o,o,o,o,
+        -37,-15,0,-6,4,3,-17,-40,        o,o,o,o,o,o,o,o,
+        -25,5,16,12,11,6,6,-29,          o,o,o,o,o,o,o,o,
+        -24,5,21,14,18,9,11,-26,         o,o,o,o,o,o,o,o,
+        -36,-5,9,23,24,21,2,-24,         o,o,o,o,o,o,o,o,
+        -32,-1,4,19,20,4,11,-25,         o,o,o,o,o,o,o,o,
+        -38,-22,4,-1,8,-5,-18,-34,       o,o,o,o,o,o,o,o,
+        -50,-46,-32,-24,-36,-25,-34,-50, o,o,o,o,o,o,o,o,
+      ],
+      [ // bishop
+        -16,-15,-12,-5,-10,-12,-10,-20, o,o,o,o,o,o,o,o,
+        -13,5,6,1,-6,-5,3,-6,           o,o,o,o,o,o,o,o,
+        -16,6,-1,16,7,-1,-6,-5,         o,o,o,o,o,o,o,o,
+        -14,-1,11,14,4,10,11,-13,       o,o,o,o,o,o,o,o,
+        -4,5,12,16,4,6,2,-16,           o,o,o,o,o,o,o,o,
+        -15,4,14,8,16,4,16,-15,         o,o,o,o,o,o,o,o,
+        -5,6,6,6,3,6,9,-7,              o,o,o,o,o,o,o,o,
+        -14,-4,-15,-4,-9,-4,-12,-14,    o,o,o,o,o,o,o,o,
+      ],
+      [ // rook
+        5,-2,6,2,-2,-6,4,-2,    o,o,o,o,o,o,o,o,
+        8,13,11,15,11,15,16,4,  o,o,o,o,o,o,o,o,
+        -6,3,3,6,1,-2,3,-5,     o,o,o,o,o,o,o,o,
+        -10,5,-4,-4,-1,-6,3,-2, o,o,o,o,o,o,o,o,
+        -4,3,5,-2,4,1,-5,1,     o,o,o,o,o,o,o,o,
+        0,1,1,-3,5,6,1,-9,      o,o,o,o,o,o,o,o,
+        -10,-1,-4,0,5,-6,-6,-9, o,o,o,o,o,o,o,o,
+        -1,-2,-6,9,9,5,4,-5,    o,o,o,o,o,o,o,o,
+      ],
+      [ // queen
+        -25,-9,-11,-3,-7,-13,-10,-17, o,o,o,o,o,o,o,o,
+        -4,-6,4,-5,-1,6,4,-5,         o,o,o,o,o,o,o,o,
+        -8,-5,2,0,7,6,-4,-5,          o,o,o,o,o,o,o,o,
+        0,-4,7,-1,7,11,0,1,           o,o,o,o,o,o,o,o,
+        -6,4,7,1,-1,2,-6,-2,          o,o,o,o,o,o,o,o,
+        -15,11,11,11,4,11,6,-15,      o,o,o,o,o,o,o,o,
+        -5,-6,1,-6,3,-3,3,-10,        o,o,o,o,o,o,o,o,
+        -15,-4,-13,-8,-3,-16,-8,-24,  o,o,o,o,o,o,o,o,
+      ],
+      [ // king
+        -30,-40,-40,-50,-50,-40,-40,-30, o,o,o,o,o,o,o,o,
+        -30,-37,-43,-49,-50,-39,-40,-30, o,o,o,o,o,o,o,o,
+        -32,-41,-40,-46,-49,-40,-46,-30, o,o,o,o,o,o,o,o,
+        -32,-38,-39,-52,-54,-39,-39,-30, o,o,o,o,o,o,o,o,
+        -20,-33,-29,-42,-44,-29,-30,-19, o,o,o,o,o,o,o,o,
+        -10,-18,-17,-20,-22,-21,-20,-13, o,o,o,o,o,o,o,o,
+        14,18,-1,-1,4,-1,15,14,          o,o,o,o,o,o,o,o,
+        21,35,11,6,1,14,32,22,           o,o,o,o,o,o,o,o,
+      ],
+    ],
+    [ // endgame
+      [ // pawn
+        0,0,0,0,0,0,0,0,              o,o,o,o,o,o,o,o,
+        -4,174,120,94,85,98,68,4,     o,o,o,o,o,o,o,o,
+        6,48,44,45,31,38,37,-6,       o,o,o,o,o,o,o,o,
+        -6,-4,-1,-6,2,-1,-2,-2,       o,o,o,o,o,o,o,o,
+        2,2,5,-3,0,-5,4,-3,           o,o,o,o,o,o,o,o,
+        -2,0,1,5,0,-1,0,1,            o,o,o,o,o,o,o,o,
+        -2,5,6,-6,0,3,4,-4,           o,o,o,o,o,o,o,o,
+        0,0,0,0,0,0,0,0,              o,o,o,o,o,o,o,o,
+      ],
+      [ // knight
+        -50,-40,-30,-24,-24,-35,-40,-50, o,o,o,o,o,o,o,o,
+        -38,-17,6,-5,5,-4,-15,-40,       o,o,o,o,o,o,o,o,
+        -24,3,15,9,15,10,-6,-26,         o,o,o,o,o,o,o,o,
+        -29,5,21,17,18,9,10,-28,         o,o,o,o,o,o,o,o,
+        -36,-5,18,16,14,20,5,-26,        o,o,o,o,o,o,o,o,
+        -32,7,5,20,11,15,9,-27,          o,o,o,o,o,o,o,o,
+        -43,-20,5,-1,5,1,-22,-40,        o,o,o,o,o,o,o,o,
+        -50,-40,-32,-27,-30,-25,-35,-50, o,o,o,o,o,o,o,o,
+      ],
+      [ // bishop
+        -14,-13,-4,-7,-14,-9,-16,-20, o,o,o,o,o,o,o,o,
+        -11,6,3,-6,4,-3,5,-4,         o,o,o,o,o,o,o,o,
+        -11,-3,5,15,4,-1,-5,-10,      o,o,o,o,o,o,o,o,
+        -7,-1,11,16,5,11,7,-13,       o,o,o,o,o,o,o,o,
+        -4,4,10,16,6,12,4,-16,        o,o,o,o,o,o,o,o,
+        -4,4,11,12,10,7,7,-12,        o,o,o,o,o,o,o,o,
+        -11,7,6,6,-3,2,1,-7,          o,o,o,o,o,o,o,o,
+        -15,-4,-11,-4,-10,-10,-6,-17, o,o,o,o,o,o,o,o,
+      ],
+      [ // rook
+        5,-6,1,-4,-4,-6,6,-3,    o,o,o,o,o,o,o,o,
+        -6,4,2,5,-1,3,4,-15,     o,o,o,o,o,o,o,o,
+        -15,3,3,0,-1,-6,5,-9,    o,o,o,o,o,o,o,o,
+        -16,6,0,-6,-3,-3,-4,-4,  o,o,o,o,o,o,o,o,
+        -15,6,2,-6,6,0,-6,-10,   o,o,o,o,o,o,o,o,
+        -6,-1,3,-2,6,5,0,-15,    o,o,o,o,o,o,o,o,
+        -8,-4,1,-4,3,-5,-6,-5,   o,o,o,o,o,o,o,o,
+        1,0,-2,1,1,4,2,0,        o,o,o,o,o,o,o,o,
+      ],
+      [ // queen
+        -21,-7,-6,1,-8,-15,-10,-16, o,o,o,o,o,o,o,o,
+        -4,-5,3,-4,2,6,3,-10,       o,o,o,o,o,o,o,o,
+        -13,-2,7,2,6,10,-4,-6,      o,o,o,o,o,o,o,o,
+        -1,-4,3,1,8,8,-2,-2,        o,o,o,o,o,o,o,o,
+        0,6,8,1,-1,1,0,-3,          o,o,o,o,o,o,o,o,
+        -11,10,6,3,7,9,4,-10,       o,o,o,o,o,o,o,o,
+        -12,-6,5,0,0,-5,4,-10,      o,o,o,o,o,o,o,o,
+        -20,-6,-7,-7,-4,-12,-9,-20, o,o,o,o,o,o,o,o,
+      ],
+      [ // king
+        -50,-40,-30,-20,-20,-30,-40,-50, o,o,o,o,o,o,o,o,
+        -30,-18,-15,6,3,-6,-24,-30,      o,o,o,o,o,o,o,o,
+        -35,-16,20,32,34,14,-11,-30,     o,o,o,o,o,o,o,o,
+        -34,-5,24,35,34,35,-16,-35,      o,o,o,o,o,o,o,o,
+        -36,-7,31,34,34,34,-12,-31,      o,o,o,o,o,o,o,o,
+        -30,-7,14,33,36,16,-13,-33,      o,o,o,o,o,o,o,o,
+        -36,-27,5,2,5,-1,-31,-33,        o,o,o,o,o,o,o,o,
+        -48,-26,-26,-26,-28,-25,-30,-51, o,o,o,o,o,o,o,o,
+      ],
+    ],
+  ];
 
-            // knight
-            [
-                -55,
-                -40,
-                -30,
-                -28,
-                -26,
-                -30,
-                -40,
-                -50,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -37,
-                -15,
-                0,
-                -6,
-                4,
-                3,
-                -17,
-                -40,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -25,
-                5,
-                16,
-                12,
-                11,
-                6,
-                6,
-                -29,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -24,
-                5,
-                21,
-                14,
-                18,
-                9,
-                11,
-                -26,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -36,
-                -5,
-                9,
-                23,
-                24,
-                21,
-                2,
-                -24,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -32,
-                -1,
-                4,
-                19,
-                20,
-                4,
-                11,
-                -25,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -38,
-                -22,
-                4,
-                -1,
-                8,
-                -5,
-                -18,
-                -34,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -50,
-                -46,
-                -32,
-                -24,
-                -36,
-                -25,
-                -34,
-                -50,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // bishop
-            [
-                -16,
-                -15,
-                -12,
-                -5,
-                -10,
-                -12,
-                -10,
-                -20,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -13,
-                5,
-                6,
-                1,
-                -6,
-                -5,
-                3,
-                -6,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -16,
-                6,
-                -1,
-                16,
-                7,
-                -1,
-                -6,
-                -5,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -14,
-                -1,
-                11,
-                14,
-                4,
-                10,
-                11,
-                -13,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                5,
-                12,
-                16,
-                4,
-                6,
-                2,
-                -16,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -15,
-                4,
-                14,
-                8,
-                16,
-                4,
-                16,
-                -15,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -5,
-                6,
-                6,
-                6,
-                3,
-                6,
-                9,
-                -7,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -14,
-                -4,
-                -15,
-                -4,
-                -9,
-                -4,
-                -12,
-                -14,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // rook
-            [
-                5,
-                -2,
-                6,
-                2,
-                -2,
-                -6,
-                4,
-                -2,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                8,
-                13,
-                11,
-                15,
-                11,
-                15,
-                16,
-                4,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -6,
-                3,
-                3,
-                6,
-                1,
-                -2,
-                3,
-                -5,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -10,
-                5,
-                -4,
-                -4,
-                -1,
-                -6,
-                3,
-                -2,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                3,
-                5,
-                -2,
-                4,
-                1,
-                -5,
-                1,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                0,
-                1,
-                1,
-                -3,
-                5,
-                6,
-                1,
-                -9,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -10,
-                -1,
-                -4,
-                0,
-                5,
-                -6,
-                -6,
-                -9,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -1,
-                -2,
-                -6,
-                9,
-                9,
-                5,
-                4,
-                -5,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // queen
-            [
-                -25,
-                -9,
-                -11,
-                -3,
-                -7,
-                -13,
-                -10,
-                -17,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                -6,
-                4,
-                -5,
-                -1,
-                6,
-                4,
-                -5,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -8,
-                -5,
-                2,
-                0,
-                7,
-                6,
-                -4,
-                -5,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                0,
-                -4,
-                7,
-                -1,
-                7,
-                11,
-                0,
-                1,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -6,
-                4,
-                7,
-                1,
-                -1,
-                2,
-                -6,
-                -2,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -15,
-                11,
-                11,
-                11,
-                4,
-                11,
-                6,
-                -15,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -5,
-                -6,
-                1,
-                -6,
-                3,
-                -3,
-                3,
-                -10,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -15,
-                -4,
-                -13,
-                -8,
-                -3,
-                -16,
-                -8,
-                -24,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // king
-            [
-                -30,
-                -40,
-                -40,
-                -50,
-                -50,
-                -40,
-                -40,
-                -30,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -30,
-                -37,
-                -43,
-                -49,
-                -50,
-                -39,
-                -40,
-                -30,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -32,
-                -41,
-                -40,
-                -46,
-                -49,
-                -40,
-                -46,
-                -30,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -32,
-                -38,
-                -39,
-                -52,
-                -54,
-                -39,
-                -39,
-                -30,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -20,
-                -33,
-                -29,
-                -42,
-                -44,
-                -29,
-                -30,
-                -19,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -10,
-                -18,
-                -17,
-                -20,
-                -22,
-                -21,
-                -20,
-                -13,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                14,
-                18,
-                -1,
-                -1,
-                4,
-                -1,
-                15,
-                14,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                21,
-                35,
-                11,
-                6,
-                1,
-                14,
-                32,
-                22,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-        ],
-
-        // endgame phase score
-        [
-            // pawn
-            [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                174,
-                120,
-                94,
-                85,
-                98,
-                68,
-                4,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                6,
-                48,
-                44,
-                45,
-                31,
-                38,
-                37,
-                -6,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -6,
-                -4,
-                -1,
-                -6,
-                2,
-                -1,
-                -2,
-                -2,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                2,
-                2,
-                5,
-                -3,
-                0,
-                -5,
-                4,
-                -3,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -2,
-                0,
-                1,
-                5,
-                0,
-                -1,
-                0,
-                1,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -2,
-                5,
-                6,
-                -6,
-                0,
-                3,
-                4,
-                -4,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // knight
-            [
-                -50,
-                -40,
-                -30,
-                -24,
-                -24,
-                -35,
-                -40,
-                -50,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -38,
-                -17,
-                6,
-                -5,
-                5,
-                -4,
-                -15,
-                -40,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -24,
-                3,
-                15,
-                9,
-                15,
-                10,
-                -6,
-                -26,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -29,
-                5,
-                21,
-                17,
-                18,
-                9,
-                10,
-                -28,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -36,
-                -5,
-                18,
-                16,
-                14,
-                20,
-                5,
-                -26,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -32,
-                7,
-                5,
-                20,
-                11,
-                15,
-                9,
-                -27,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -43,
-                -20,
-                5,
-                -1,
-                5,
-                1,
-                -22,
-                -40,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -50,
-                -40,
-                -32,
-                -27,
-                -30,
-                -25,
-                -35,
-                -50,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // bishop
-            [
-                -14,
-                -13,
-                -4,
-                -7,
-                -14,
-                -9,
-                -16,
-                -20,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -11,
-                6,
-                3,
-                -6,
-                4,
-                -3,
-                5,
-                -4,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -11,
-                -3,
-                5,
-                15,
-                4,
-                -1,
-                -5,
-                -10,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -7,
-                -1,
-                11,
-                16,
-                5,
-                11,
-                7,
-                -13,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                4,
-                10,
-                16,
-                6,
-                12,
-                4,
-                -16,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                4,
-                11,
-                12,
-                10,
-                7,
-                7,
-                -12,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -11,
-                7,
-                6,
-                6,
-                -3,
-                2,
-                1,
-                -7,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -15,
-                -4,
-                -11,
-                -4,
-                -10,
-                -10,
-                -6,
-                -17,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // rook
-            [
-                5,
-                -6,
-                1,
-                -4,
-                -4,
-                -6,
-                6,
-                -3,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -6,
-                4,
-                2,
-                5,
-                -1,
-                3,
-                4,
-                -15,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -15,
-                3,
-                3,
-                0,
-                -1,
-                -6,
-                5,
-                -9,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -16,
-                6,
-                0,
-                -6,
-                -3,
-                -3,
-                -4,
-                -4,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -15,
-                6,
-                2,
-                -6,
-                6,
-                0,
-                -6,
-                -10,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -6,
-                -1,
-                3,
-                -2,
-                6,
-                5,
-                0,
-                -15,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -8,
-                -4,
-                1,
-                -4,
-                3,
-                -5,
-                -6,
-                -5,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                1,
-                0,
-                -2,
-                1,
-                1,
-                4,
-                2,
-                0,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // queen
-            [
-                -21,
-                -7,
-                -6,
-                1,
-                -8,
-                -15,
-                -10,
-                -16,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -4,
-                -5,
-                3,
-                -4,
-                2,
-                6,
-                3,
-                -10,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -13,
-                -2,
-                7,
-                2,
-                6,
-                10,
-                -4,
-                -6,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -1,
-                -4,
-                3,
-                1,
-                8,
-                8,
-                -2,
-                -2,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                0,
-                6,
-                8,
-                1,
-                -1,
-                1,
-                0,
-                -3,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -11,
-                10,
-                6,
-                3,
-                7,
-                9,
-                4,
-                -10,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -12,
-                -6,
-                5,
-                0,
-                0,
-                -5,
-                4,
-                -10,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -20,
-                -6,
-                -7,
-                -7,
-                -4,
-                -12,
-                -9,
-                -20,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-
-            // king
-            [
-                -50,
-                -40,
-                -30,
-                -20,
-                -20,
-                -30,
-                -40,
-                -50,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -30,
-                -18,
-                -15,
-                6,
-                3,
-                -6,
-                -24,
-                -30,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -35,
-                -16,
-                20,
-                32,
-                34,
-                14,
-                -11,
-                -30,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -34,
-                -5,
-                24,
-                35,
-                34,
-                35,
-                -16,
-                -35,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -36,
-                -7,
-                31,
-                34,
-                34,
-                34,
-                -12,
-                -31,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -30,
-                -7,
-                14,
-                33,
-                36,
-                16,
-                -13,
-                -33,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -36,
-                -27,
-                5,
-                2,
-                5,
-                -1,
-                -31,
-                -33,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                -48,
-                -26,
-                -26,
-                -26,
-                -28,
-                -25,
-                -30,
-                -51,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-                o,
-            ],
-        ],
-    ];
-
-    // mirror positional score tables for opposite side
+    // prettier-ignore
     const mirrorSquare = [
-        a1,
-        b1,
-        c1,
-        d1,
-        e1,
-        f1,
-        g1,
-        h1,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        a2,
-        b2,
-        c2,
-        d2,
-        e2,
-        f2,
-        g2,
-        h2,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        a3,
-        b3,
-        c3,
-        d3,
-        e3,
-        f3,
-        g3,
-        h3,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        a4,
-        b4,
-        c4,
-        d4,
-        e4,
-        f4,
-        g4,
-        h4,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        a5,
-        b5,
-        c5,
-        d5,
-        e5,
-        f5,
-        g5,
-        h5,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        a6,
-        b6,
-        c6,
-        d6,
-        e6,
-        f6,
-        g6,
-        h6,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        a7,
-        b7,
-        c7,
-        d7,
-        e7,
-        f7,
-        g7,
-        h7,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        a8,
-        b8,
-        c8,
-        d8,
-        e8,
-        f8,
-        g8,
-        h8,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-        o,
-    ];
+    a1,b1,c1,d1,e1,f1,g1,h1, o,o,o,o,o,o,o,o,
+    a2,b2,c2,d2,e2,f2,g2,h2, o,o,o,o,o,o,o,o,
+    a3,b3,c3,d3,e3,f3,g3,h3, o,o,o,o,o,o,o,o,
+    a4,b4,c4,d4,e4,f4,g4,h4, o,o,o,o,o,o,o,o,
+    a5,b5,c5,d5,e5,f5,g5,h5, o,o,o,o,o,o,o,o,
+    a6,b6,c6,d6,e6,f6,g6,h6, o,o,o,o,o,o,o,o,
+    a7,b7,c7,d7,e7,f7,g7,h7, o,o,o,o,o,o,o,o,
+    a8,b8,c8,d8,e8,f8,g8,h8, o,o,o,o,o,o,o,o,
+  ];
 
-    // insufficient material detection
     function isMaterialDraw() {
-        if (pieceList[P] == 0 && pieceList[p] == 0) {
-            if (
-                pieceList[R] == 0 &&
-                pieceList[r] == 0 &&
-                pieceList[Q] == 0 &&
-                pieceList[q] == 0
-            ) {
-                if (pieceList[B] == 0 && pieceList[b] == 0) {
-                    if (pieceList[N] < 3 && pieceList[n] < 3) return 1;
-                } else if (pieceList[N] == 0 && pieceList[n] == 0) {
-                    if (Math.abs(pieceList[B] - pieceList[b]) < 2) return 1;
-                } else if (
-                    (pieceList[N] < 3 && pieceList[B] == 0) ||
-                    (pieceList[B] == 1 && pieceList[N] == 0)
-                ) {
-                    if (
-                        (pieceList[n] < 3 && pieceList[b] == 0) ||
-                        (pieceList[b] == 1 && pieceList[n] == 0)
-                    )
-                        return 1;
-                }
-            } else if (pieceList[Q] == 0 && pieceList[q] == 0) {
-                if (pieceList[R] == 1 && pieceList[r] == 1) {
-                    if (
-                        pieceList[N] + pieceList[B] < 2 &&
-                        pieceList[n] + pieceList[b] < 2
-                    )
-                        return 1;
-                } else if (pieceList[R] == 1 && pieceList[r] == 0) {
-                    if (
-                        pieceList[N] + pieceList[B] == 0 &&
-                        (pieceList[n] + pieceList[b] == 1 ||
-                            pieceList[n] + pieceList[b] == 2)
-                    )
-                        return 1;
-                } else if (pieceList[r] == 1 && pieceList[R] == 0) {
-                    if (
-                        pieceList[n] + pieceList[b] == 0 &&
-                        (pieceList[N] + pieceList[B] == 1 ||
-                            pieceList[N] + pieceList[B] == 2)
-                    )
-                        return 1;
-                }
+        if (pieceList[P] || pieceList[p]) return 0;
+        if (!pieceList[R] && !pieceList[r] && !pieceList[Q] && !pieceList[q]) {
+            if (!pieceList[B] && !pieceList[b]) {
+                if (pieceList[N] < 3 && pieceList[n] < 3) return 1;
+            } else if (!pieceList[N] && !pieceList[n]) {
+                if (Math.abs(pieceList[B] - pieceList[b]) < 2) return 1;
+            } else if (
+                (pieceList[N] < 3 && !pieceList[B]) ||
+                (pieceList[B] === 1 && !pieceList[N])
+            )
+                if (
+                    (pieceList[n] < 3 && !pieceList[b]) ||
+                    (pieceList[b] === 1 && !pieceList[n])
+                )
+                    return 1;
+        } else if (!pieceList[Q] && !pieceList[q]) {
+            if (pieceList[R] === 1 && pieceList[r] === 1) {
+                if (
+                    pieceList[N] + pieceList[B] < 2 &&
+                    pieceList[n] + pieceList[b] < 2
+                )
+                    return 1;
+            } else if (pieceList[R] === 1 && !pieceList[r]) {
+                if (
+                    !pieceList[N] + pieceList[B] &&
+                    (pieceList[n] + pieceList[b] === 1 ||
+                        pieceList[n] + pieceList[b] === 2)
+                )
+                    return 1;
+            } else if (pieceList[r] === 1 && !pieceList[R]) {
+                if (
+                    !pieceList[n] + pieceList[b] &&
+                    (pieceList[N] + pieceList[B] === 1 ||
+                        pieceList[N] + pieceList[B] === 2)
+                )
+                    return 1;
             }
         }
-
         return 0;
     }
 
-    // get game phase score
     function getGamePhaseScore() {
-        let gamePhaseScore = 0;
-
-        for (let piece = N; piece <= Q; piece++)
-            gamePhaseScore +=
-                pieceList[piece] * materialWeights[opening][piece];
-        for (let piece = n; piece <= q; piece++)
-            gamePhaseScore +=
-                pieceList[piece] * -materialWeights[opening][piece];
-
-        return gamePhaseScore;
+        let s = 0;
+        for (let pc = N; pc <= Q; pc++)
+            s += pieceList[pc] * materialWeights[opening][pc];
+        for (let pc = n; pc <= q; pc++)
+            s += pieceList[pc] * -materialWeights[opening][pc];
+        return s;
     }
 
-    // static evaluation
     function evaluate() {
         if (isMaterialDraw()) return 0;
+        const gps = getGamePhaseScore();
+        const gp =
+            gps > openingPhaseScore
+                ? opening
+                : gps < endgamePhaseScore
+                  ? endgame
+                  : middlegame;
+        let sO = 0,
+            sE = 0;
 
-        let gamePhaseScore = getGamePhaseScore();
-        let gamePhase = -1;
-
-        if (gamePhaseScore > openingPhaseScore) gamePhase = opening;
-        else if (gamePhaseScore < endgamePhaseScore) gamePhase = endgame;
-        else gamePhase = middlegame;
-
-        let score = 0;
-        var scoreOpening = 0;
-        var scoreEndgame = 0;
-
-        for (let piece = P; piece <= k; piece++) {
-            for (pieceIndex = 0; pieceIndex < pieceList[piece]; pieceIndex++) {
-                let square = pieceList.pieces[piece * 10 + pieceIndex];
-
-                // evaluate material
-                scoreOpening += materialWeights[opening][piece];
-                scoreEndgame += materialWeights[endgame][piece];
-
-                // positional score
-                switch (piece) {
-                    case P:
-                        scoreOpening += pst[opening][PAWN_PST][square];
-                        scoreEndgame += pst[endgame][PAWN_PST][square];
-                        break;
-
-                    case N:
-                        scoreOpening += pst[opening][KNIGHT_PST][square];
-                        scoreEndgame += pst[endgame][KNIGHT_PST][square];
-                        break;
-
-                    case B:
-                        scoreOpening += pst[opening][BISHOP_PST][square];
-                        scoreEndgame += pst[endgame][BISHOP_PST][square];
-                        break;
-
-                    case R:
-                        scoreOpening += pst[opening][ROOK_PST][square];
-                        scoreEndgame += pst[endgame][ROOK_PST][square];
-                        break;
-
-                    case Q:
-                        scoreOpening += pst[opening][QUEEN_PST][square];
-                        scoreEndgame += pst[endgame][QUEEN_PST][square];
-                        break;
-
-                    case K:
-                        scoreOpening += pst[opening][KING_PST][square];
-                        scoreEndgame += pst[endgame][KING_PST][square];
-                        break;
-
-                    case p:
-                        scoreOpening -=
-                            pst[opening][PAWN_PST][mirrorSquare[square]];
-                        scoreEndgame -=
-                            pst[endgame][PAWN_PST][mirrorSquare[square]];
-                        break;
-
-                    case n:
-                        scoreOpening -=
-                            pst[opening][KNIGHT_PST][mirrorSquare[square]];
-                        scoreEndgame -=
-                            pst[endgame][KNIGHT_PST][mirrorSquare[square]];
-                        break;
-
-                    case b:
-                        scoreOpening -=
-                            pst[opening][BISHOP_PST][mirrorSquare[square]];
-                        scoreEndgame -=
-                            pst[endgame][BISHOP_PST][mirrorSquare[square]];
-                        break;
-
-                    case r:
-                        scoreOpening -=
-                            pst[opening][ROOK_PST][mirrorSquare[square]];
-                        scoreEndgame -=
-                            pst[endgame][ROOK_PST][mirrorSquare[square]];
-                        break;
-
-                    case q:
-                        scoreOpening -=
-                            pst[opening][QUEEN_PST][mirrorSquare[square]];
-                        scoreEndgame -=
-                            pst[endgame][QUEEN_PST][mirrorSquare[square]];
-                        break;
-
-                    case k:
-                        scoreOpening -=
-                            pst[opening][KING_PST][mirrorSquare[square]];
-                        scoreEndgame -=
-                            pst[endgame][KING_PST][mirrorSquare[square]];
-                        break;
-                }
+        for (let pc = P; pc <= k; pc++) {
+            for (let pi = 0; pi < pieceList[pc]; pi++) {
+                const sq = pieceList.pieces[pc * 10 + pi];
+                sO += materialWeights[opening][pc];
+                sE += materialWeights[endgame][pc];
+                const pstIdx = [
+                    null,
+                    PAWN_PST,
+                    KNIGHT_PST,
+                    BISHOP_PST,
+                    ROOK_PST,
+                    QUEEN_PST,
+                    KING_PST,
+                    PAWN_PST,
+                    KNIGHT_PST,
+                    BISHOP_PST,
+                    ROOK_PST,
+                    QUEEN_PST,
+                    KING_PST,
+                ];
+                const sign = pc <= K ? 1 : -1;
+                const msq = pc <= K ? sq : mirrorSquare[sq];
+                sO += sign * pst[opening][pstIdx[pc]][msq];
+                sE += sign * pst[endgame][pstIdx[pc]][msq];
             }
         }
 
-        // interpolate score in the middlegame
-        if (gamePhase == middlegame)
-            score =
-                (scoreOpening * gamePhaseScore +
-                    scoreEndgame * (openingPhaseScore - gamePhaseScore)) /
-                openingPhaseScore;
-        else if (gamePhase == opening) score = scoreOpening;
-        else if (gamePhase == endgame) score = scoreEndgame;
+        let score =
+            gp === middlegame
+                ? (sO * gps + sE * (openingPhaseScore - gps)) /
+                  openingPhaseScore
+                : gp === opening
+                  ? sO
+                  : sE;
 
         score = ((score * (100 - fifty)) / 100) << 0;
-        return side == white ? score : -score;
+        return side === white ? score : -score;
     }
 
     /****************************\
    ============================
-   
-       TRANSPOSITION TABLE
-
-   ============================              
+         TRANSPOSITION TABLE
+   ============================
   \****************************/
 
-    // 16Mb default hash table size
     var hashEntries = 838860;
-
-    // no hash entry found constant
     const noHashEntry = 100000;
-
-    // transposition table hash flags
-    const HASH_EXACT = 0;
-    const HASH_ALPHA = 1;
-    const HASH_BETA = 2;
-
-    // define TT instance
+    const HASH_EXACT = 0,
+        HASH_ALPHA = 1,
+        HASH_BETA = 2;
     var hashTable = [];
 
-    // set hash size
     function setHashSize(Mb) {
-        hashTable = [];
-
-        // adjust MB if going beyond the aloowed bounds
         if (Mb < 4) Mb = 4;
         if (Mb > 128) Mb = 128;
-
         hashEntries = parseInt((Mb * 0x100000) / 20);
         initHashTable();
-
-        console.log("Set hash table size to", Mb, "Mb");
-        console.log("Hash table initialized with", hashEntries, "entries");
+        console.log(`Set hash table size to ${Mb} Mb (${hashEntries} entries)`);
     }
 
-    // clear TT (hash table)
     function initHashTable() {
-        // loop over TT elements
-        for (var index = 0; index < hashEntries; index++) {
-            // reset TT inner fields
-            hashTable[index] = {
+        hashTable = [];
+        for (let i = 0; i < hashEntries; i++)
+            hashTable[i] = {
                 hashKey: 0,
                 depth: 0,
                 flag: 0,
                 score: 0,
                 bestMove: 0,
             };
-        }
     }
 
-    // read hash entry data
     function readHashEntry(alpha, beta, bestMove, depth) {
-        // init hash entry
-        var hashEntry = hashTable[(hashKey & 0x7fffffff) % hashEntries];
-
-        // match hash key
-        if (hashEntry.hashKey == hashKey) {
-            if (hashEntry.depth >= depth) {
-                // init score
-                var score = hashEntry.score;
-
-                // adjust mating scores
+        const entry = hashTable[(hashKey & 0x7fffffff) % hashEntries];
+        if (entry.hashKey === hashKey) {
+            if (entry.depth >= depth) {
+                let score = entry.score;
                 if (score < -mateScore) score += searchPly;
                 if (score > mateScore) score -= searchPly;
-
-                // match hash flag
-                if (hashEntry.flag == HASH_EXACT) return score;
-                if (hashEntry.flag == HASH_ALPHA && score <= alpha)
-                    return alpha;
-                if (hashEntry.flag == HASH_BETA && score >= beta) return beta;
+                if (entry.flag === HASH_EXACT) return score;
+                if (entry.flag === HASH_ALPHA && score <= alpha) return alpha;
+                if (entry.flag === HASH_BETA && score >= beta) return beta;
             }
-
-            // store best move
-            bestMove.value = hashEntry.bestMove;
+            bestMove.value = entry.bestMove;
         }
-
-        // if hash entry doesn't exist
         return noHashEntry;
     }
 
-    // write hash entry data
-    function writeHashEntry(score, bestMove, depth, hashFlag) {
-        // init hash entry
-        var hashEntry = hashTable[(hashKey & 0x7fffffff) % hashEntries];
-
-        // adjust mating scores
+    function writeHashEntry(score, bestMove, depth, flag) {
+        const entry = hashTable[(hashKey & 0x7fffffff) % hashEntries];
         if (score < -mateScore) score -= searchPly;
         if (score > mateScore) score += searchPly;
-
-        // write hash entry data
-        hashEntry.hashKey = hashKey;
-        hashEntry.score = score;
-        hashEntry.flag = hashFlag;
-        hashEntry.depth = depth;
-        hashEntry.bestMove = bestMove;
+        entry.hashKey = hashKey;
+        entry.score = score;
+        entry.flag = flag;
+        entry.depth = depth;
+        entry.bestMove = bestMove;
     }
 
     /****************************\
    ============================
-   
-              SEARCH
-
-   ============================              
+         SEARCH
+   ============================
   \****************************/
 
+    // prettier-ignore
     const mvvLva = [
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 105, 205, 305, 405, 505, 605,
-        105, 205, 305, 405, 505, 605, 0, 104, 204, 304, 404, 504, 604, 104, 204,
-        304, 404, 504, 604, 0, 103, 203, 303, 403, 503, 603, 103, 203, 303, 403,
-        503, 603, 0, 102, 202, 302, 402, 502, 602, 102, 202, 302, 402, 502, 602,
-        0, 101, 201, 301, 401, 501, 601, 101, 201, 301, 401, 501, 601, 0, 100,
-        200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600,
+    0,  0,  0,  0,  0,  0,  0,   0,  0,  0,  0,  0,  0,
+    0,105,205,305,405,505,605, 105,205,305,405,505,605,
+    0,104,204,304,404,504,604, 104,204,304,404,504,604,
+    0,103,203,303,403,503,603, 103,203,303,403,503,603,
+    0,102,202,302,402,502,602, 102,202,302,402,502,602,
+    0,101,201,301,401,501,601, 101,201,301,401,501,601,
+    0,100,200,300,400,500,600, 100,200,300,400,500,600,
+    0,105,205,305,405,505,605, 105,205,305,405,505,605,
+    0,104,204,304,404,504,604, 104,204,304,404,504,604,
+    0,103,203,303,403,503,603, 103,203,303,403,503,603,
+    0,102,202,302,402,502,602, 102,202,302,402,502,602,
+    0,101,201,301,401,501,601, 101,201,301,401,501,601,
+    0,100,200,300,400,500,600, 100,200,300,400,500,600,
+  ];
 
-        0, 105, 205, 305, 405, 505, 605, 105, 205, 305, 405, 505, 605, 0, 104,
-        204, 304, 404, 504, 604, 104, 204, 304, 404, 504, 604, 0, 103, 203, 303,
-        403, 503, 603, 103, 203, 303, 403, 503, 603, 0, 102, 202, 302, 402, 502,
-        602, 102, 202, 302, 402, 502, 602, 0, 101, 201, 301, 401, 501, 601, 101,
-        201, 301, 401, 501, 601, 0, 100, 200, 300, 400, 500, 600, 100, 200, 300,
-        400, 500, 600,
-    ];
+    const maxPly = 64,
+        infinity = 50000,
+        mateValue = 49000,
+        mateScore = 48000;
+    const DO_NULL = 1,
+        NO_NULL = 0;
 
-    // search  constants
-    const maxPly = 64;
-    const infinity = 50000;
-    const mateValue = 49000;
-    const mateScore = 48000;
-    const DO_NULL = 1;
-    const NO_NULL = 0;
-
-    // search variables
     var followPv;
-
-    // PV table
     var pvTable = new Array(maxPly * maxPly);
     var pvLength = new Array(maxPly);
-
-    // killer moves
     var killerMoves = new Array(2 * maxPly);
-
-    // history moves
     var historyMoves = new Array(13 * 128);
-
-    // repetition table
     var repetitionTable = new Array(1000);
 
-    // time control handling
-    var timing = {
-        timeSet: 0,
-        stopTime: 0,
-        stopped: 0,
-        time: -1,
-    };
-
-    // set time control
-    function setTimeControl(timeControl) {
-        timing = timeControl;
+    var timing = { timeSet: 0, stopTime: 0, stopped: 0, time: -1 };
+    function setTimeControl(tc) {
+        timing = tc;
     }
-
-    // reset time control
     function resetTimeControl() {
-        timing = {
-            timeSet: 0,
-            stopTime: 0,
-            stopped: 0,
-            time: -1,
-        };
+        timing = { timeSet: 0, stopTime: 0, stopped: 0, time: -1 };
     }
 
     function clearSearch() {
-        // reset nodes counter
         nodes = 0;
         timing.stopped = 0;
         searchPly = 0;
-
-        for (let index = 0; index < pvTable.length; index++) pvTable[index] = 0;
-        for (let index = 0; index < pvLength.length; index++)
-            pvLength[index] = 0;
-        for (let index = 0; index < killerMoves.length; index++)
-            killerMoves[index] = 0;
-        for (let index = 0; index < historyMoves.length; index++)
-            historyMoves[index] = 0;
+        pvTable.fill(0);
+        pvLength.fill(0);
+        killerMoves.fill(0);
+        historyMoves.fill(0);
     }
 
-    // handle time control
     function checkTime() {
-        if (timing.timeSet == 1 && Date.now() > timing.stopTime)
-            timing.stopped = 1;
+        if (timing.timeSet && Date.now() > timing.stopTime) timing.stopped = 1;
     }
 
-    // position repetition detection
     function isRepetition() {
-        for (let index = 0; index < gamePly; index++)
-            if (repetitionTable[index] == hashKey) return 1;
-
+        for (let i = 0; i < gamePly; i++)
+            if (repetitionTable[i] === hashKey) return 1;
         return 0;
     }
 
-    // move ordering
-    function sortMoves(currentCount, moveList) {
-        for (
-            let nextCount = currentCount + 1;
-            nextCount < moveList.length;
-            nextCount++
-        ) {
-            if (moveList[currentCount].score < moveList[nextCount].score) {
-                let tempMove = moveList[currentCount];
-
-                moveList[currentCount] = moveList[nextCount];
-                moveList[nextCount] = tempMove;
+    function sortMoves(cur, list) {
+        for (let nxt = cur + 1; nxt < list.length; nxt++) {
+            if (list[cur].score < list[nxt].score) {
+                const tmp = list[cur];
+                list[cur] = list[nxt];
+                list[nxt] = tmp;
             }
         }
     }
 
-    // sort PV move
-    function sortPvMove(moveList, bestMove) {
-        // sort hash table move
-        for (let count = 0; count < moveList.length; count++) {
-            if (moveList[count].move == bestMove.value) {
-                moveList[count].score = 30000;
+    function sortPvMove(list, best) {
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].move === best.value) {
+                list[i].score = 30000;
                 return;
             }
         }
-
-        // sort PV move
         if (searchPly && followPv) {
             followPv = 0;
-            for (let count = 0; count < moveList.length; count++) {
-                if (moveList[count].move == pvTable[searchPly]) {
+            for (let i = 0; i < list.length; i++) {
+                if (list[i].move === pvTable[searchPly]) {
                     followPv = 1;
-                    moveList[count].score = 20000;
+                    list[i].score = 20000;
                     break;
                 }
             }
         }
     }
 
-    // store PV move
     function storePvMove(move) {
         pvTable[searchPly * 64 + searchPly] = move;
-        for (
-            var nextPly = searchPly + 1;
-            nextPly < pvLength[searchPly + 1];
-            nextPly++
-        )
-            pvTable[searchPly * 64 + nextPly] =
-                pvTable[(searchPly + 1) * 64 + nextPly];
+        for (let np = searchPly + 1; np < pvLength[searchPly + 1]; np++)
+            pvTable[searchPly * 64 + np] = pvTable[(searchPly + 1) * 64 + np];
         pvLength[searchPly] = pvLength[searchPly + 1];
     }
 
-    // quiescence search
     function quiescence(alpha, beta) {
         pvLength[searchPly] = searchPly;
         nodes++;
-
-        if ((nodes & 2047) == 0) {
+        if ((nodes & 2047) === 0) {
             checkTime();
-            if (timing.stopped == 1) return 0;
+            if (timing.stopped) return 0;
         }
-
         if (searchPly > maxPly - 1) return evaluate();
 
-        let evaluation = evaluate();
+        const ev = evaluate();
+        if (ev >= beta) return beta;
+        if (ev > alpha) alpha = ev;
 
-        if (evaluation >= beta) return beta;
-        if (evaluation > alpha) alpha = evaluation;
-
-        var moveList = [];
-        generateCaptures(moveList);
-
-        // sort PV move
-        sortPvMove(moveList, { value: 0 });
-
-        // loop over moves
-        for (var count = 0; count < moveList.length; count++) {
-            sortMoves(count, moveList);
-            let move = moveList[count].move;
-
-            if (makeMove(move) == 0) continue;
-            var score = -quiescence(-beta, -alpha);
+        const ml = [];
+        generateCaptures(ml);
+        sortPvMove(ml, { value: 0 });
+        for (let i = 0; i < ml.length; i++) {
+            sortMoves(i, ml);
+            if (!makeMove(ml[i].move)) continue;
+            const score = -quiescence(-beta, -alpha);
             takeBack();
-
-            if (timing.stopped == 1) return 0;
+            if (timing.stopped) return 0;
             if (score > alpha) {
-                storePvMove(move);
+                storePvMove(ml[i].move);
                 alpha = score;
-
                 if (score >= beta) return beta;
             }
         }
-
         return alpha;
     }
 
-    // negamax search
     function negamax(alpha, beta, depth, nullMove) {
         pvLength[searchPly] = searchPly;
+        const best = { value: 0 };
+        let hashFlag = HASH_ALPHA,
+            score = 0;
+        const pvNode = beta - alpha > 1;
+        let futility = 0;
 
-        // best move for TT
-        var bestMove = { value: 0 };
-        var hashFlag = HASH_ALPHA;
-        let score = 0;
-        let pvNode = beta - alpha > 1;
-        let futilityPruning = 0;
-
-        // read hash entry
         if (
             searchPly &&
-            (score = readHashEntry(alpha, beta, bestMove, depth)) !=
-                noHashEntry &&
-            pvNode == 0
+            (score = readHashEntry(alpha, beta, best, depth)) !== noHashEntry &&
+            !pvNode
         )
             return score;
-
-        // check time left
-        if ((nodes & 2047) == 0) {
+        if ((nodes & 2047) === 0) {
             checkTime();
-            if (timing.stopped == 1) return 0;
+            if (timing.stopped) return 0;
         }
-
         if ((searchPly && isRepetition()) || fifty >= 100) return 0;
-        if (depth == 0) {
+        if (depth === 0) {
             nodes++;
             return quiescence(alpha, beta);
         }
 
-        // mate distance pruning
         if (alpha < -mateValue) alpha = -mateValue;
         if (beta > mateValue - 1) beta = mateValue - 1;
         if (alpha >= beta) return alpha;
 
         let legalMoves = 0;
-        let inCheck = isSquareAttacked(kingSquare[side], side ^ 1);
-
-        // check extension
+        const inCheck = isSquareAttacked(kingSquare[side], side ^ 1);
         if (inCheck) depth++;
 
-        if (inCheck == 0 && pvNode == 0) {
-            // static evaluation for pruning purposes
-            let staticEval = evaluate();
-
-            // evalution pruning
+        if (!inCheck && !pvNode) {
+            const se = evaluate();
             if (depth < 3 && Math.abs(beta - 1) > -mateValue + 100) {
-                let evalMargin = materialWeights[opening][P] * depth;
-                if (staticEval - evalMargin >= beta)
-                    return staticEval - evalMargin;
+                const margin = materialWeights[opening][P] * depth;
+                if (se - margin >= beta) return se - margin;
             }
-
             if (nullMove) {
-                // null move pruning
-                if (searchPly && depth > 2 && staticEval >= beta) {
+                if (searchPly && depth > 2 && se >= beta) {
                     makeNullMove();
-                    score = -negamax(-beta, -beta + 1, depth - 1 - 2, NO_NULL);
+                    score = -negamax(-beta, -beta + 1, depth - 3, NO_NULL);
                     takeNullMove();
-
-                    if (timing.stopped == 1) return 0;
+                    if (timing.stopped) return 0;
                     if (score >= beta) return beta;
                 }
-
-                // razoring
-                score = staticEval + materialWeights[opening][P];
-                let newScore;
-
-                if (score < beta) {
-                    if (depth == 1) {
-                        newScore = quiescence(alpha, beta);
-                        return newScore > score ? newScore : score;
+                let rzScore = se + materialWeights[opening][P];
+                if (rzScore < beta) {
+                    if (depth === 1) {
+                        const ns = quiescence(alpha, beta);
+                        return ns > rzScore ? ns : rzScore;
                     }
                 }
-
-                score += materialWeights[opening][P];
-
-                if (score < beta && depth < 4) {
-                    newScore = quiescence(alpha, beta);
-                    if (newScore < beta)
-                        return newScore > score ? newScore : score;
+                rzScore += materialWeights[opening][P];
+                if (rzScore < beta && depth < 4) {
+                    const ns = quiescence(alpha, beta);
+                    if (ns < beta) return ns > rzScore ? ns : rzScore;
                 }
             }
-
-            // futility pruning condition
-            let futilityMargin = [
+            const fm = [
                 0,
                 materialWeights[opening][P],
                 materialWeights[opening][N],
                 materialWeights[opening][R],
             ];
-
             if (
                 depth < 4 &&
                 Math.abs(alpha) < mateScore &&
-                staticEval + futilityMargin[depth] <= alpha
+                se + fm[depth] <= alpha
             )
-                futilityPruning = 1;
+                futility = 1;
         }
 
-        let movesSearched = 0;
-        let moveList = [];
-        generateMoves(moveList);
+        let searched = 0;
+        const ml = [];
+        generateMoves(ml);
+        sortPvMove(ml, best);
 
-        // sort PV move
-        sortPvMove(moveList, bestMove);
-
-        // loop over moves
-        for (let count = 0; count < moveList.length; count++) {
-            sortMoves(count, moveList);
-            let move = moveList[count].move;
-            if (makeMove(move) == 0) continue;
+        for (let i = 0; i < ml.length; i++) {
+            sortMoves(i, ml);
+            const move = ml[i].move;
+            if (!makeMove(move)) continue;
             legalMoves++;
 
-            // futility pruning
             if (
-                futilityPruning &&
-                movesSearched &&
-                getMoveCapture(move) == 0 &&
-                getMovePromoted(move) == 0 &&
-                isSquareAttacked(kingSquare[side], side ^ 1) == 0
+                futility &&
+                searched &&
+                !getMoveCapture(move) &&
+                !getMovePromoted(move) &&
+                !isSquareAttacked(kingSquare[side], side ^ 1)
             ) {
                 takeBack();
                 continue;
             }
 
-            if (movesSearched == 0)
+            if (searched === 0) {
                 score = -negamax(-beta, -alpha, depth - 1, DO_NULL);
-            else {
-                // LMR
+            } else {
+                const isKiller =
+                    getMoveSource(move) ===
+                        getMoveSource(killerMoves[searchPly]) &&
+                    getMoveTarget(move) ===
+                        getMoveTarget(killerMoves[searchPly]);
+                const isKiller2 =
+                    getMoveSource(move) ===
+                        getMoveSource(killerMoves[maxPly + searchPly]) &&
+                    getMoveTarget(move) ===
+                        getMoveTarget(killerMoves[maxPly + searchPly]);
                 if (
-                    pvNode == 0 &&
-                    movesSearched > 3 &&
+                    !pvNode &&
+                    searched > 3 &&
                     depth > 2 &&
-                    inCheck == 0 &&
-                    (getMoveSource(move) !=
-                        getMoveSource(killerMoves[searchPly]) ||
-                        getMoveTarget(move) !=
-                            getMoveTarget(killerMoves[searchPly])) &&
-                    (getMoveSource(move) !=
-                        getMoveSource(killerMoves[maxPly + searchPly]) ||
-                        getMoveTarget(move) !=
-                            getMoveTarget(killerMoves[maxPly + searchPly])) &&
-                    getMoveCapture(move) == 0 &&
-                    getMovePromoted(move) == 0
+                    !inCheck &&
+                    !isKiller &&
+                    !isKiller2 &&
+                    !getMoveCapture(move) &&
+                    !getMovePromoted(move)
                 ) {
                     score = -negamax(-alpha - 1, -alpha, depth - 2, DO_NULL);
                 } else score = alpha + 1;
 
-                // PVS
                 if (score > alpha) {
                     score = -negamax(-alpha - 1, -alpha, depth - 1, DO_NULL);
                     if (score > alpha && score < beta)
@@ -4178,155 +1458,95 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             }
 
             takeBack();
-            movesSearched++;
-
-            if (timing.stopped == 1) return 0;
+            searched++;
+            if (timing.stopped) return 0;
             if (score > alpha) {
                 hashFlag = HASH_EXACT;
-                bestMove.value = move;
+                best.value = move;
                 alpha = score;
                 storePvMove(move);
-
-                // store history moves
-                if (getMoveCapture(move) == 0)
+                if (!getMoveCapture(move))
                     historyMoves[
                         board[getMoveSource(move)] * 128 + getMoveTarget(move)
                     ] += depth;
-
                 if (score >= beta) {
-                    // store hash entry with the score equal to beta
-                    writeHashEntry(beta, bestMove.value, depth, HASH_BETA);
-
-                    // store killer moves
-                    if (getMoveCapture(move) == 0) {
+                    writeHashEntry(beta, best.value, depth, HASH_BETA);
+                    if (!getMoveCapture(move)) {
                         killerMoves[maxPly + searchPly] =
                             killerMoves[searchPly];
                         killerMoves[searchPly] = move;
                     }
-
                     return beta;
                 }
             }
         }
 
-        // checkmate or stalemate
-        if (legalMoves == 0) {
-            if (inCheck) return -mateValue + searchPly;
-            else return 0;
-        }
-
-        // store hash entry with the score equal to alpha
-        writeHashEntry(alpha, bestMove.value, depth, hashFlag);
-
+        if (!legalMoves) return inCheck ? -mateValue + searchPly : 0;
+        writeHashEntry(alpha, best.value, depth, hashFlag);
         return alpha;
     }
 
-    // search position for the best move
     function searchPosition(depth) {
-        let start = Date.now();
-        let score = 0;
-        let lastBestMove = 0;
-
+        const start = Date.now();
+        let score = 0,
+            lastBest = 0;
         clearSearch();
 
-        // iterative deepening
-        for (let currentDepth = 1; currentDepth <= depth; currentDepth++) {
-            lastBestMove = pvTable[0];
+        for (let d = 1; d <= depth; d++) {
+            lastBest = pvTable[0];
             followPv = 1;
-            score = negamax(-infinity, infinity, currentDepth, DO_NULL);
-
-            // stop searching if time is up
+            score = negamax(-infinity, infinity, d, DO_NULL);
             if (
-                timing.stopped == 1 ||
-                (Date.now() > timing.stopTime && timing.time != -1)
+                timing.stopped ||
+                (Date.now() > timing.stopTime && timing.time !== -1)
             )
                 break;
 
             let info = "";
-
-            if (typeof document != "undefined") var uciScore = 0;
-
+            let uciScore = 0;
             if (score >= -mateValue && score <= -mateScore) {
-                info =
-                    "info score mate " +
-                    parseInt(-(score + mateValue) / 2 - 1) +
-                    " depth " +
-                    currentDepth +
-                    " nodes " +
-                    nodes +
-                    " time " +
-                    (Date.now() - start) +
-                    " pv ";
-
-                if (typeof document != "undefined")
-                    uciScore =
-                        "M" + Math.abs(parseInt(-(score + mateValue) / 2 - 1));
+                const m = parseInt(-(score + mateValue) / 2 - 1);
+                info = `info score mate ${m} depth ${d} nodes ${nodes} time ${Date.now() - start} pv `;
+                uciScore = "M" + Math.abs(m);
             } else if (score >= mateScore && score <= mateValue) {
-                info =
-                    "info score mate " +
-                    parseInt((mateValue - score) / 2 + 1) +
-                    " depth " +
-                    currentDepth +
-                    " nodes " +
-                    nodes +
-                    " time " +
-                    (Date.now() - start) +
-                    " pv ";
-
-                if (typeof document != "undefined")
-                    uciScore =
-                        "M" + Math.abs(parseInt((mateValue - score) / 2 + 1));
+                const m = parseInt((mateValue - score) / 2 + 1);
+                info = `info score mate ${m} depth ${d} nodes ${nodes} time ${Date.now() - start} pv `;
+                uciScore = "M" + Math.abs(m);
             } else {
-                info =
-                    "info score cp " +
-                    score +
-                    " depth " +
-                    currentDepth +
-                    " nodes " +
-                    nodes +
-                    " time " +
-                    (Date.now() - start) +
-                    " pv ";
-
-                if (typeof document != "undefined") uciScore = -score;
+                info = `info score cp ${score} depth ${d} nodes ${nodes} time ${Date.now() - start} pv `;
+                uciScore = -score;
             }
 
-            for (let count = 0; count < pvLength[0]; count++)
-                info += moveToString(pvTable[count]) + " ";
-
+            for (let c = 0; c < pvLength[0]; c++)
+                info += moveToString(pvTable[c]) + " ";
             console.log(info);
 
-            if (typeof document != "undefined") {
-                if (uciScore == 49000) uciScore = "M1";
+            if (typeof document !== "undefined") {
+                if (uciScore === 49000) uciScore = "M1";
                 guiScore = uciScore;
                 guiDepth = info.split("depth ")[1].split(" ")[0];
                 guiPv = info.split("pv ")[1];
                 guiTime = info.split("time ")[1].split(" ")[0];
             }
-
             if (info.includes("mate") || info.includes("-49000")) break;
         }
 
-        let bestMove = timing.stopped == 1 ? lastBestMove : pvTable[0];
+        const bestMove = timing.stopped ? lastBest : pvTable[0];
         console.log("bestmove " + moveToString(bestMove));
         return bestMove;
     }
 
     /****************************\
    ============================
-   
-          INPUT & OUTPUT
-
-   ============================              
+         INPUT & OUTPUT
+   ============================
   \****************************/
 
-    // castling bits
     var KC = 1,
         QC = 2,
         kc = 4,
         qc = 8;
 
-    // decode promoted pieces
     var promotedPieces = {
         [Q]: "q",
         [R]: "r",
@@ -4338,23 +1558,8 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         [n]: "n",
     };
 
-    // encode ascii pieces
-    var charPieces = {
-        P: P,
-        N: N,
-        B: B,
-        R: R,
-        Q: Q,
-        K: K,
-        p: p,
-        n: n,
-        b: b,
-        r: r,
-        q: q,
-        k: k,
-    };
+    var charPieces = { P, N, B, R, Q, K, p, n, b, r, q, k };
 
-    // unicode piece representation
     const unicodePieces = [
         ".",
         "\u2659",
@@ -4371,93 +1576,55 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         "\u265A",
     ];
 
-    // set board position from FEN
     function setBoard(fen) {
         resetBoard();
-        var index = 0;
-
-        // parse board position
-        for (var rank = 0; rank < 8; rank++) {
-            for (var file = 0; file < 16; file++) {
-                var square = rank * 16 + file;
-                if ((square & 0x88) == 0) {
-                    if (
-                        (fen[index].charCodeAt() >= "a".charCodeAt() &&
-                            fen[index].charCodeAt() <= "z".charCodeAt()) ||
-                        (fen[index].charCodeAt() >= "A".charCodeAt() &&
-                            fen[index].charCodeAt() <= "Z".charCodeAt())
-                    ) {
-                        if (fen[index] == "K") kingSquare[white] = square;
-                        else if (fen[index] == "k") kingSquare[black] = square;
-                        board[square] = charPieces[fen[index]];
-                        index++;
+        let idx = 0;
+        for (let rank = 0; rank < 8; rank++) {
+            for (let file = 0; file < 16; file++) {
+                const sq = rank * 16 + file;
+                if (!(sq & 0x88)) {
+                    const ch = fen[idx];
+                    if (/[a-zA-Z]/.test(ch)) {
+                        if (ch === "K") kingSquare[white] = sq;
+                        if (ch === "k") kingSquare[black] = sq;
+                        board[sq] = charPieces[ch];
+                        idx++;
                     }
-                    if (
-                        fen[index].charCodeAt() >= "0".charCodeAt() &&
-                        fen[index].charCodeAt() <= "9".charCodeAt()
-                    ) {
-                        var offset = fen[index] - "0";
-                        if (!board[square]) file--;
-                        file += offset;
-                        index++;
+                    if (/[0-9]/.test(fen[idx])) {
+                        const off = fen[idx] - "0";
+                        if (!board[sq]) file--;
+                        file += off;
+                        idx++;
                     }
-                    if (fen[index] == "/") index++;
+                    if (fen[idx] === "/") idx++;
                 }
             }
         }
-
-        // parse side to move
-        index++;
-        side = fen[index] == "w" ? white : black;
-        index += 2;
-
-        // parse castling rights
-        while (fen[index] != " ") {
-            switch (fen[index]) {
-                case "K":
-                    castle |= KC;
-                    break;
-                case "Q":
-                    castle |= QC;
-                    break;
-                case "k":
-                    castle |= kc;
-                    break;
-                case "q":
-                    castle |= qc;
-                    break;
-                case "-":
-                    break;
-            }
-
-            index++;
+        idx++;
+        side = fen[idx] === "w" ? white : black;
+        idx += 2;
+        while (fen[idx] !== " ") {
+            if (fen[idx] === "K") castle |= KC;
+            if (fen[idx] === "Q") castle |= QC;
+            if (fen[idx] === "k") castle |= kc;
+            if (fen[idx] === "q") castle |= qc;
+            idx++;
         }
-
-        index++;
-
-        // parse enpassant square
-        if (fen[index] != "-") {
-            var file = fen[index].charCodeAt() - "a".charCodeAt();
-            var rank = 8 - (fen[index + 1].charCodeAt() - "0".charCodeAt());
-            enpassant = rank * 16 + file;
-        } else enpassant = noEnpassant;
-
-        // parse 50 rule move counter
-        fifty = parseInt(fen.slice(index, fen.length - 1).split(" ")[1]);
-
-        // parse full move counter
-        gamePly = parseInt(fen.slice(index, fen.length + 1).split(" ")[2]) * 2;
-
-        // generate unique position identifier
+        idx++;
+        enpassant =
+            fen[idx] !== "-"
+                ? fen[idx].charCodeAt() -
+                  "a".charCodeAt() +
+                  (8 - (fen[idx + 1].charCodeAt() - "0".charCodeAt())) * 16
+                : noEnpassant;
+        fifty = parseInt(fen.slice(idx).split(" ")[1]);
+        gamePly = parseInt(fen.slice(idx).split(" ")[2]) * 2;
         hashKey = generateHashKey();
-
-        // init piece list
         initPieceList();
     }
 
-    // generate FEN string (to integrate with chessboardjs lib)
     function generateFen() {
-        let pieces = [
+        const names = [
             "",
             "P",
             "N",
@@ -4473,185 +1640,89 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             "k",
         ];
         let fen = "";
-
         for (let rank = 0; rank < 8; rank++) {
             let empty = 0;
-
             for (let file = 0; file < 16; file++) {
-                let square = rank * 16 + file;
-
-                if ((square & 0x88) == 0) {
-                    let piece = board[square];
-
-                    if (piece == 0) empty++;
-                    if (piece) {
-                        fen += (empty ? empty : "") + pieces[piece];
+                const sq = rank * 16 + file;
+                if (!(sq & 0x88)) {
+                    const pc = board[sq];
+                    if (!pc) empty++;
+                    else {
+                        fen += (empty || "") + names[pc];
                         empty = 0;
                     }
                 }
             }
-
             if (empty) fen += empty;
-            empty = 0;
             if (rank < 7) fen += "/";
         }
-
         fen += " " + (engine.getSide() ? "b" : "w");
-        //fen += ' ' + '- - 0 1'
         return fen;
     }
 
-    // load move sequence
     function loadMoves(moves) {
-        moves = moves.split(" ");
-
-        for (let index = 0; index < moves.length; index++) {
-            let move = moves[index];
-            let moveString = moves[index];
-            let validMove = moveFromString(move);
-            if (validMove == 0) return 0; // return illegal move
-            if (validMove) makeMove(validMove);
+        for (const mv of moves.split(" ")) {
+            const valid = moveFromString(mv);
+            if (!valid) return 0;
+            makeMove(valid);
         }
-
         searchPly = 0;
-        return 1; // return legal move
+        return 1;
     }
 
-    // get game moves
     function getMoves() {
-        let moves = [];
-
-        for (let index = 0; index < moveStack.length; index++)
-            moves.push(moveToString(moveStack[index].move));
-
-        return moves;
+        return moveStack.map((m) => moveToString(m.move));
     }
 
-    // print chess board to console
     function printBoard() {
-        var boardString = "";
-
-        // print board position
-        for (var rank = 0; rank < 8; rank++) {
-            for (var file = 0; file < 16; file++) {
-                var square = rank * 16 + file;
-                if (file == 0)
-                    boardString += "   " + (8 - rank).toString() + " ";
-                if ((square & 0x88) == 0)
-                    boardString += unicodePieces[board[square]] + " ";
+        let s = "";
+        for (let rank = 0; rank < 8; rank++) {
+            for (let file = 0; file < 16; file++) {
+                const sq = rank * 16 + file;
+                if (file === 0) s += `   ${8 - rank} `;
+                if (!(sq & 0x88)) s += unicodePieces[board[sq]] + " ";
             }
-            boardString += "\n";
+            s += "\n";
         }
-
-        boardString += "     a b c d e f g h";
-
-        // print board state variables
-        boardString += "\n\n     Side:     " + (side == 0 ? "white" : "black");
-        boardString +=
-            "\n     Castling:  " +
-            (castle & KC ? "K" : "-") +
-            (castle & QC ? "Q" : "-") +
-            (castle & kc ? "k" : "-") +
-            (castle & qc ? "q" : "-");
-        boardString +=
-            "\n     Ep:          " +
-            (enpassant == noEnpassant ? "no" : coordinates[enpassant]);
-        boardString += "\n\n     Key: " + hashKey;
-        boardString += "\n 50 rule:          " + fifty;
-        boardString +=
-            "\n   moves:          " +
-            (gamePly % 2
-                ? Math.round(gamePly / 2) - 1
-                : Math.round(gamePly / 2));
-        console.log(boardString + "\n");
-
+        s += "     a b c d e f g h";
+        s += `\n\n     Side:     ${side === 0 ? "white" : "black"}`;
+        s += `\n     Castling:  ${castle & KC ? "K" : "-"}${castle & QC ? "Q" : "-"}${castle & kc ? "k" : "-"}${castle & qc ? "q" : "-"}`;
+        s += `\n     Ep:          ${enpassant === noEnpassant ? "no" : coordinates[enpassant]}`;
+        s += `\n\n     Key: ${hashKey}`;
+        s += `\n 50 rule:          ${fifty}`;
+        s += `\n   moves:          ${gamePly % 2 ? Math.round(gamePly / 2) - 1 : Math.round(gamePly / 2)}`;
+        console.log(s + "\n");
         initHashTable();
     }
 
-    // print move
     function moveToString(move) {
-        if (getMovePromoted(move)) {
-            return (
-                coordinates[getMoveSource(move)] +
-                coordinates[getMoveTarget(move)] +
-                promotedPieces[getMovePromoted(move)]
-            );
-        } else {
-            return (
-                coordinates[getMoveSource(move)] +
-                coordinates[getMoveTarget(move)]
-            );
-        }
+        return (
+            coordinates[getMoveSource(move)] +
+            coordinates[getMoveTarget(move)] +
+            (getMovePromoted(move) ? promotedPieces[getMovePromoted(move)] : "")
+        );
     }
 
-    // print move list
-    function printMoveList(moveList) {
-        var listMoves =
-            "   Move     Capture  Double   Enpass   Castling  Score\n\n";
-
-        for (var index = 0; index < moveList.length; index++) {
-            var move = moveList[index].move;
-            listMoves +=
-                "   " +
-                coordinates[getMoveSource(move)] +
-                coordinates[getMoveTarget(move)];
-            listMoves += getMovePromoted(move)
-                ? promotedPieces[getMovePromoted(move)]
+    function printMoveList(list) {
+        let s = "   Move     Capture  Double   Enpass   Castling  Score\n\n";
+        for (const item of list) {
+            const mv = item.move;
+            s += `   ${coordinates[getMoveSource(mv)]}${coordinates[getMoveTarget(mv)]}`;
+            s += getMovePromoted(mv)
+                ? promotedPieces[getMovePromoted(mv)]
                 : " ";
-            listMoves +=
-                "    " +
-                getMoveCapture(move) +
-                "        " +
-                getMovePawn(move) +
-                "        " +
-                getMoveEnpassant(move) +
-                "        " +
-                getMoveCastling(move) +
-                "         " +
-                moveList[index].score +
-                "\n";
+            s += `    ${getMoveCapture(mv)}        ${getMovePawn(mv)}        ${getMoveEnpassant(mv)}        ${getMoveCastling(mv)}         ${item.score}\n`;
         }
-
-        listMoves += "\n   Total moves: " + moveList.length;
-        console.log(listMoves);
-    }
-
-    // print piece list & material counts
-    function printPieceList() {
-        var materialCountString = "    Material counts:\n\n";
-
-        // print material count
-        for (var piece = P; piece <= k; piece++)
-            materialCountString +=
-                "    " + unicodePieces[piece] + ": " + pieceList[piece] + "\n";
-
-        console.log(materialCountString);
-        var pieceListString = "    Piece list:\n\n";
-
-        // print piece-square pairs
-        for (var piece = P; piece <= k; piece++)
-            for (
-                var pieceNumber = 0;
-                pieceNumber < pieceList[piece];
-                pieceNumber++
-            )
-                pieceListString +=
-                    "    " +
-                    unicodePieces[piece] +
-                    ": " +
-                    coordinates[pieceList.pieces[piece * 10 + pieceNumber]] +
-                    "\n";
+        s += `\n   Total moves: ${list.length}`;
+        console.log(s);
     }
 
     /****************************\
    ============================
-   
-               INIT
-
-   ============================              
+         INIT
+   ============================
   \****************************/
 
-    // init all
     (function initAll() {
         initRandomKeys();
         hashKey = generateHashKey();
@@ -4661,51 +1732,28 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
 
     /****************************\
    ============================
-   
-            DEBUGGING
-
-   ============================              
+         DEBUGGING
+   ============================
   \****************************/
 
-    // below you can test inner engine methods
     function debug() {
-        //setBoard('kqb5/pppppppp/8/8/8/8/PPPPPPPP/KQR5 w K7 - 0 1 ');
         setBoard(
             "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 10 ",
         );
-        //setBoard('r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10');
-        //setBoard('rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8');
-        //setBoard('rnbqkbnr/pp4pp/2p5/3Npp2/2PpP3/3P1P2/PP4PP/R1BQKBNR b KQkq e3 0 6 ');
-        //setBoard('rn2kb1r/pp5p/5n2/2p5/4pN2/111P4/PPP2PPP/R2Q1RK1 w kq - 0 15 ');
-        //setBoard('8/1p3p2/ppp2p2/8/5P2/PPP2P2/1P6/8 b - - 4 1 ');
-        //setBoard('8/p1p1p1pp/8/8/8/8/PP1P1P1P/8 b - - 4 1 ');
-
-        //setBoard('8/4P3/2pp2p1/pp1p2p1/1P1P2PP/2PP2P1/4p3/8 w - - 4 1 ');
-        //setBoard('8/p2p2pp/3p2p1/8/8/3P2P1/P2P2PP/8 w - - 0 0 ')
-        //setBoard('8/8/4p3/3p1p2/3P1P2/4P3/8/8 w -- 0 0 ');
-        //setBoard('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 ');
         updateBoard();
     }
 
+    /****************************\
+   ============================
+         PUBLIC API
+   ============================
+  \****************************/
+
     return {
-        /****************************\
-     ============================
-   
-              PUBLIC API
-
-     ============================              
-    \****************************/
-
-        // Engine constants
         VERSION: version,
         ELO: elo,
         START_FEN: startFen,
-
-        COLOR: {
-            WHITE: white,
-            BLACK: black,
-        },
-
+        COLOR: { WHITE: white, BLACK: black },
         PIECE: {
             NO_PIECE: e,
             WHITE_PAWN: P,
@@ -4721,7 +1769,6 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             BLACK_QUEEN: q,
             BLACK_KING: k,
         },
-
         SQUARE: {
             A8: a8,
             B8: b8,
@@ -4789,7 +1836,7 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             H1: h1,
         },
 
-        // GUI methods
+        // GUI
         drawBoard: function () {
             try {
                 return drawBoard();
@@ -4804,9 +1851,9 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
                 guiError(".updateBoard()");
             }
         },
-        movePiece: function (userSource, userTarget, promotedPiece) {
+        movePiece: function (s, t, p) {
             try {
-                movePiece(userSource, userTarget, promotedPiece);
+                movePiece(s, t, p);
             } catch (e) {
                 guiError(".movePiece()");
             }
@@ -4820,136 +1867,60 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         },
 
         // perft
-        perft: function (depth) {
-            perftTest(depth);
-        },
+        perft: (depth) => perftTest(depth),
 
-        // board methods
-        squareToString: function (square) {
-            return coordinates[square];
-        },
-        promotedToString: function (piece) {
-            return promotedPieces[piece];
-        },
-        printBoard: function () {
-            printBoard();
-        },
-        setBoard: function (fen) {
-            setBoard(fen);
-        },
-        generateFen: function () {
-            return generateFen();
-        },
-        getPiece: function (square) {
-            return board[square];
-        },
-        getSide: function () {
-            return side;
-        },
-        getFifty: function () {
-            return fifty;
-        },
+        // board
+        squareToString: (sq) => coordinates[sq],
+        promotedToString: (pc) => promotedPieces[pc],
+        printBoard: () => printBoard(),
+        setBoard: (fen) => setBoard(fen),
+        generateFen: () => generateFen(),
+        getPiece: (sq) => board[sq],
+        getSide: () => side,
+        getFifty: () => fifty,
 
-        // move manipulation
-        moveFromString: function (moveString) {
-            return moveFromString(moveString);
-        },
-        moveToString: function (move) {
-            return moveToString(move);
-        },
-        makeMove: function (move) {
-            makeMove(move);
-        },
-        moveStack: function () {
-            return moveStack;
-        },
-        loadMoves: function (moves) {
-            loadMoves(moves);
-        },
-        getMoves: function () {
-            return getMoves();
-        },
-        pgn: function () {
-            return getGamePgn();
-        },
-        getMoveSource: function (move) {
-            return getMoveSource(move);
-        },
-        getMoveTarget: function (move) {
-            return getMoveTarget(move);
-        },
-        getMovePromoted: function (move) {
-            return getMovePromoted(move);
-        },
-        getMoveCapture: function (move) {
-            return getMoveCapture(move);
-        },
-        getMoveCastling: function (move) {
-            return getMoveCastling(move);
-        },
-        generateLegalMoves: function () {
-            return generateLegalMoves();
-        },
-        printMoveList: function (moveList) {
-            printMoveList(moveList);
-        },
+        // moves
+        moveFromString: (s) => moveFromString(s),
+        moveToString: (mv) => moveToString(mv),
+        makeMove: (mv) => makeMove(mv),
+        moveStack: () => moveStack,
+        loadMoves: (mvs) => loadMoves(mvs),
+        getMoves: () => getMoves(),
+        pgn: () => getGamePgn(),
+        getMoveSource: (mv) => getMoveSource(mv),
+        getMoveTarget: (mv) => getMoveTarget(mv),
+        getMovePromoted: (mv) => getMovePromoted(mv),
+        getMoveCapture: (mv) => getMoveCapture(mv),
+        getMoveCastling: (mv) => getMoveCastling(mv),
+        generateLegalMoves: () => generateLegalMoves(),
+        printMoveList: (ml) => printMoveList(ml),
 
-        // timing
-        resetTimeControl: function () {
-            resetTimeControl();
-        },
-        setTimeControl: function (timeControl) {
-            setTimeControl(timeControl);
-        },
-        getTimeControl: function () {
-            return JSON.parse(JSON.stringify(timing));
-        },
-        search: function (depth) {
-            return searchPosition(depth);
-        },
+        // timing / search
+        resetTimeControl: () => resetTimeControl(),
+        setTimeControl: (tc) => setTimeControl(tc),
+        getTimeControl: () => JSON.parse(JSON.stringify(timing)),
+        search: (d) => searchPosition(d),
         searchTime: function (ms) {
             resetTimeControl();
-            let startTime = new Date().getTime();
             timing.timeSet = 1;
             timing.time = ms;
-            timing.stopTime = startTime + timing.time;
+            timing.stopTime = Date.now() + ms;
             return engine.search(64);
         },
 
         // misc
-        setPlayerPower: function (power) {
-            setPlayerPower(power);
-        },
-        getPlayerPower: function () {
-            return getPlayerPower();
-        },
-        isMaterialDraw: function () {
-            return isMaterialDraw();
-        },
-        takeBack: function () {
+        setPlayerPower: (pw) => setPlayerPower(pw),
+        getPlayerPower: () => getPlayerPower(),
+        isMaterialDraw: () => isMaterialDraw(),
+        takeBack: () => {
             if (moveStack.length) takeBack();
         },
-        isRepetition: function () {
-            return isRepetition();
-        },
-        inCheck: function (color) {
-            return isSquareAttacked(kingSquare[color], color ^ 1);
-        },
-        isSquareAttacked: function (square, color) {
-            return isSquareAttacked(square, color);
-        },
-
-        // uci
-        setHashSize: function (Mb) {
-            setHashSize(Mb);
-        },
-
-        // debugging (run any internal engine function)
-        debug: function () {
-            debug();
-        },
+        isRepetition: () => isRepetition(),
+        inCheck: (c) => isSquareAttacked(kingSquare[c], c ^ 1),
+        isSquareAttacked: (sq, c) => isSquareAttacked(sq, c),
+        setHashSize: (mb) => setHashSize(mb),
+        debug: () => debug(),
     };
 };
 
-// export as nodejs module
-if (typeof exports != "undefined") exports.Engine = Engine;
+if (typeof exports !== "undefined") exports.Engine = Engine;
