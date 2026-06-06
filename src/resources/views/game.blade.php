@@ -152,6 +152,125 @@
         color: rgba(244, 239, 227, 0.74);
       }
 
+      .power-panel {
+        width: min(640px, 100%);
+        margin: 22px auto 10px;
+        padding: 16px;
+        border: 1px solid rgba(201, 168, 76, 0.18);
+        border-radius: 22px;
+        background: rgba(6, 10, 18, 0.55);
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.22);
+      }
+
+      .power-panel__header {
+        margin-bottom: 12px;
+      }
+
+      .power-panel__label {
+        margin: 0;
+        font-size: 0.74rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(201, 168, 76, 0.82);
+      }
+
+      .power-panel__title {
+        margin: 4px 0 0;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.55rem;
+        line-height: 1;
+        color: #fff7e4;
+      }
+
+      .power-panel__hint {
+        margin: 6px 0 0;
+        color: rgba(244, 239, 227, 0.72);
+        font-size: 0.95rem;
+      }
+
+      .power-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .power-card {
+        position: relative;
+        display: block;
+        margin: 0;
+        padding: 14px 14px 13px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+          rgba(14, 21, 34, 0.92);
+        color: var(--game-text);
+        text-align: left;
+        cursor: pointer;
+        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      }
+
+      .power-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(201, 168, 76, 0.32);
+        box-shadow: 0 14px 26px rgba(0, 0, 0, 0.24);
+      }
+
+      .power-card.active {
+        border-color: rgba(201, 168, 76, 0.75);
+        background:
+          linear-gradient(180deg, rgba(201, 168, 76, 0.18), rgba(201, 168, 76, 0.05)),
+          rgba(14, 21, 34, 0.96);
+        box-shadow: 0 0 0 1px rgba(201, 168, 76, 0.18) inset, 0 18px 34px rgba(0, 0, 0, 0.28);
+      }
+
+      .power-card__radio {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .power-card__badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 54px;
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #111;
+        background: var(--game-gold);
+      }
+
+      .power-card__name {
+        display: block;
+        margin-top: 12px;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.6rem;
+        line-height: 1;
+        color: #fff7e4;
+      }
+
+      .power-card__desc {
+        display: block;
+        margin-top: 8px;
+        color: rgba(244, 239, 227, 0.72);
+        font-size: 0.92rem;
+        line-height: 1.45;
+      }
+
+      .power-state {
+        margin-top: 10px;
+        color: rgba(244, 239, 227, 0.62);
+        font-size: 0.9rem;
+      }
+
+      .power-state strong {
+        color: #fff7e4;
+      }
+
       #chessboard {
         width: min(400px, 100%);
         margin: 26px auto 14px;
@@ -214,6 +333,42 @@
         <div align="center" class="col game-shell">
           <p class="game-kicker">Chess War</p>
           <h1 class="game-title">Battle Arena</h1>
+          <p class="game-subtitle">Choose one user power before the match starts. The bot stays standard.</p>
+
+          <div class="power-panel">
+            <div class="power-panel__header">
+              <p class="power-panel__label">User privilege</p>
+              <h2 class="power-panel__title">Select 1 Active Power</h2>
+              <p class="power-panel__hint">Only one power can be active at a time, and it applies to the player side only.</p>
+            </div>
+
+            <div class="power-grid" id="power-grid" role="radiogroup" aria-label="Choose active power">
+              <label class="power-card active" data-power="confused_pawn">
+                <input class="power-card__radio" type="radio" name="active_power" value="confused_pawn" checked>
+                <span class="power-card__badge">User only</span>
+                <span class="power-card__name">Confused Pawn</span>
+                <span class="power-card__desc">Pawn can move backward too, making file control much more chaotic.</span>
+              </label>
+
+              <label class="power-card" data-power="blink_knight">
+                <input class="power-card__radio" type="radio" name="active_power" value="blink_knight">
+                <span class="power-card__badge">User only</span>
+                <span class="power-card__name">Blink Knight</span>
+                <span class="power-card__desc">Knight jumps with a longer reach, doubling the usual movement patterns.</span>
+              </label>
+
+              <label class="power-card" data-power="super_rook">
+                <input class="power-card__radio" type="radio" name="active_power" value="super_rook">
+                <span class="power-card__badge">User only</span>
+                <span class="power-card__name">Super Rook</span>
+                <span class="power-card__desc">Rook keeps straight lines and gains one-step forward diagonals.</span>
+              </label>
+            </div>
+
+            <div class="power-state">
+              Active power: <strong id="active-power-label">Confused Pawn</strong>
+            </div>
+          </div>
 
           <!-- chess board view -->
           <div id="chessboard" class=" mb-2 mt-5" style="width: 400px;"></div>
@@ -252,6 +407,32 @@
     
     // set initial board position
     board.position('start');
+  });
+
+  function syncActivePower(card) {
+    $('.power-card').removeClass('active');
+    $(card).addClass('active');
+
+    const label = $(card).find('.power-card__name').text().trim();
+    const value = $(card).find('.power-card__radio').val();
+
+    $('#active-power-label').text(label);
+    window.activePlayerPower = value;
+    if (window.engine && typeof window.engine.setPlayerPower === 'function') {
+      window.engine.setPlayerPower(value);
+    }
+  }
+
+  $('#power-grid').on('change', 'input[name="active_power"]', function() {
+    syncActivePower(this.closest('.power-card'));
+  });
+
+  $('#power-grid').on('click', '.power-card', function() {
+    const radio = $(this).find('input[name="active_power"]')[0];
+    if (radio && !radio.checked) {
+      radio.checked = true;
+      $(radio).trigger('change');
+    }
   });
   
   // handle make move button click
@@ -387,4 +568,7 @@
   
   // create WukongJS engine instance
   const engine = new Engine();
+  window.engine = engine;
+  window.activePlayerPower = 'confused_pawn';
+  engine.setPlayerPower(window.activePlayerPower);
 </script>
