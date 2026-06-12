@@ -1924,3 +1924,4 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
 };
 
 if (typeof exports !== "undefined") exports.Engine = Engine;
+
