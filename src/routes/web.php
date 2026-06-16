@@ -38,8 +38,28 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
+Route::get('/dashboard', function (Illuminate\Http\Request $request) {
+    $user = auth()->user();
+    $tab = $request->query('tab', 'overview');
+
+    // Fetch stats
+    $totalMatches = $user->matches()->count();
+    $wonMatches = $user->matches()->where('is_win', true)->count();
+    $winrate = $totalMatches > 0 ? round(($wonMatches / $totalMatches) * 100) : 0;
+
+    $powerCounts = $user->matches()
+        ->select('power_type', \DB::raw('count(*) as count'))
+        ->groupBy('power_type')
+        ->pluck('count', 'power_type')
+        ->toArray();
+
+    $avgSeconds = $user->matches()->avg('total_time') ?? 0;
+    $avgMinutes = round($avgSeconds / 60, 1);
+
+    // Fetch history
+    $matches = $user->matches()->orderBy('created_at', 'desc')->get();
+
+    return view('dashboard', compact('tab', 'winrate', 'powerCounts', 'avgMinutes', 'totalMatches', 'wonMatches', 'matches'));
 })->middleware('auth')->name('dashboard');
 
 Route::get('/game', function () {

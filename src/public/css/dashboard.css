@@ -119,22 +119,87 @@ body {
     );
 }
 
-.dash-main {
-    width: min(920px, calc(100% - 2rem));
+.dash-container {
+    display: flex;
+    gap: 2.5rem;
+    width: min(1200px, calc(100% - 2rem));
     margin: 0 auto;
-    padding-bottom: 2rem;
+    padding-bottom: 3rem;
+}
+
+/* ── SIDEBAR ── */
+.dash-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    position: sticky;
+    top: 92px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1.2rem;
+    color: var(--cream);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+    background: rgba(26, 22, 18, 0.35);
+}
+
+.sidebar-link:hover {
+    color: var(--gold-lt);
+    border-color: rgba(201, 168, 76, 0.15);
+    background: rgba(201, 168, 76, 0.04);
+}
+
+.sidebar-link.active {
+    color: var(--gold);
+    border-color: var(--border);
+    background: linear-gradient(90deg, rgba(201, 168, 76, 0.1), transparent);
+    font-weight: 600;
+}
+
+.sidebar-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    transition: stroke 0.2s ease;
+}
+
+/* ── MAIN CONTENT ── */
+.dash-content {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
 .dash-hero {
     border: 1px solid var(--border);
     background: linear-gradient(
         145deg,
-        rgba(201, 168, 76, 0.12),
-        rgba(14, 12, 10, 0.94)
+        rgba(201, 168, 76, 0.08),
+        rgba(14, 12, 10, 0.96)
     );
     padding: 2.3rem;
     border-radius: 3px;
-    text-align: center;
+    text-align: left;
 }
 
 .dash-kicker {
@@ -147,7 +212,7 @@ body {
 
 .dash-hero h1 {
     font-family: "Cormorant Garamond", serif;
-    font-size: clamp(2rem, 4vw, 2.8rem);
+    font-size: clamp(2rem, 3.5vw, 2.5rem);
     font-weight: 600;
     color: var(--ivory);
     margin-bottom: 0.5rem;
@@ -156,24 +221,24 @@ body {
 .dash-hero p {
     color: #d5c8ae;
     font-size: 0.92rem;
-    max-width: 540px;
-    margin: 0 auto 1.8rem;
+    max-width: 580px;
+    margin: 0 0 1.8rem;
 }
 
 .play-now-btn {
     display: inline-block;
-    padding: 1rem 2.8rem;
-    border-radius: 3px;
+    padding: 0.85rem 2.5rem;
+    border-radius: 2px;
     text-decoration: none;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--dark);
     background: linear-gradient(180deg, var(--gold-lt), var(--gold));
     box-shadow:
         0 0 0 1px rgba(201, 168, 76, 0.3),
-        0 14px 34px rgba(201, 168, 76, 0.26);
+        0 10px 25px rgba(201, 168, 76, 0.15);
     transition:
         transform 0.2s ease,
         box-shadow 0.2s ease;
@@ -183,70 +248,325 @@ body {
     transform: translateY(-2px);
     box-shadow:
         0 0 0 1px rgba(201, 168, 76, 0.4),
-        0 18px 40px rgba(201, 168, 76, 0.33);
+        0 14px 30px rgba(201, 168, 76, 0.22);
 }
 
-.quick-section {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.quick-card {
-    border: 1px solid var(--border);
-    background: rgba(14, 12, 10, 0.9);
-    padding: 1.4rem;
-}
-
-.quick-card h2 {
-    font-family: "Cormorant Garamond", serif;
-    color: var(--ivory);
-    font-size: 1.2rem;
-    margin-bottom: 0.4rem;
-}
-
-.quick-card p {
-    color: var(--muted);
-    font-size: 0.83rem;
-    margin-bottom: 1rem;
-}
-
-.quick-link {
-    color: var(--gold);
-    text-decoration: none;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+.play-now-btn.btn-small {
+    padding: 0.6rem 1.6rem;
     font-size: 0.72rem;
 }
 
-.quick-link:hover {
+/* ── STATS GRID ── */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.stats-card {
+    border: 1px solid var(--border);
+    background: rgba(14, 12, 10, 0.85);
+    backdrop-filter: blur(8px);
+    border-radius: 3px;
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 220px;
+    transition: border-color 0.25s ease;
+}
+
+.stats-card:hover {
+    border-color: rgba(201, 168, 76, 0.45);
+}
+
+.stats-card .card-header h3 {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold-lt);
+    margin-bottom: 1.2rem;
+}
+
+.stats-card .card-footer p {
+    font-size: 0.76rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+.stats-card .card-footer strong {
+    color: var(--ivory);
+}
+
+/* Circular Chart */
+.circular-chart {
+    display: block;
+    margin: 0 auto;
+    max-width: 90px;
+    max-height: 90px;
+}
+
+.circle-bg {
+    fill: none;
+    stroke: rgba(201, 168, 76, 0.1);
+    stroke-width: 2.8;
+}
+
+.circle {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 2.8;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.35s ease;
+}
+
+.circular-chart .percentage {
+    fill: var(--ivory);
+    font-family: 'Jost', sans-serif;
+    font-size: 7px;
+    font-weight: 600;
+    text-anchor: middle;
+}
+
+/* Duration display */
+.duration-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: auto 0;
+    padding: 0.5rem 0;
+}
+
+.clock-icon-wrapper svg {
+    width: 42px;
+    height: 42px;
+    stroke: var(--gold);
+}
+
+.duration-value {
+    display: flex;
+    align-items: baseline;
+    gap: 0.2rem;
+}
+
+.duration-value .number {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: var(--ivory);
+    line-height: 1;
+}
+
+.duration-value .unit {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Power Stats List */
+.powers-usage-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.78rem;
+    margin: auto 0;
+}
+
+.power-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.power-stat-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+}
+
+.power-stat-name {
+    color: var(--cream);
+    font-weight: 500;
+}
+
+.power-stat-count {
+    color: var(--gold);
+    font-weight: 500;
+}
+
+.power-stat-bar-bg {
+    height: 4px;
+    background: rgba(201, 168, 76, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.power-stat-bar {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+}
+
+/* ── HISTORY SECTION ── */
+.history-section {
+    border: 1px solid var(--border);
+    background: rgba(14, 12, 10, 0.85);
+    border-radius: 3px;
+    padding: 2rem;
+}
+
+.history-header {
+    margin-bottom: 1.8rem;
+}
+
+.history-header h2 {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.8rem;
+    color: var(--ivory);
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.history-header p {
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+.empty-history {
+    text-align: center;
+    padding: 3.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.empty-history svg {
+    width: 60px;
+    height: 60px;
+    stroke: var(--muted);
+}
+
+.empty-history p {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Table styles */
+.table-container {
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.88rem;
+}
+
+.history-table th {
+    border-bottom: 2px solid var(--border);
+    padding: 0.8rem 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
     color: var(--gold-lt);
 }
 
-@media (max-width: 780px) {
-    .dash-nav {
-        padding: 0 1rem;
-        height: 64px;
+.history-table td {
+    padding: 0.95rem 1rem;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.1);
+    color: var(--cream);
+    vertical-align: middle;
+}
+
+.history-table tr:hover td {
+    background: rgba(201, 168, 76, 0.02);
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 0.22rem 0.65rem;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.badge-win {
+    background: rgba(74, 117, 89, 0.15);
+    color: #83c5be;
+    border: 1px solid rgba(74, 117, 89, 0.35);
+}
+
+.badge-loss {
+    background: rgba(186, 73, 73, 0.12);
+    color: #e5989b;
+    border: 1px solid rgba(186, 73, 73, 0.3);
+}
+
+.power-badge {
+    display: inline-block;
+    padding: 0.18rem 0.55rem;
+    border-radius: 2px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    background: rgba(201, 168, 76, 0.08);
+    color: var(--gold-lt);
+    border: 1px solid rgba(201, 168, 76, 0.18);
+}
+
+.power-badge.no-power {
+    background: rgba(26, 22, 18, 0.45);
+    color: var(--muted);
+    border: 1px solid rgba(245, 240, 232, 0.1);
+}
+
+.duration-cell, .date-cell {
+    font-size: 0.82rem;
+    color: var(--cream);
+}
+
+/* ── RESPONSIVE STYLES ── */
+@media (max-width: 900px) {
+    .dash-container {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding-bottom: 2rem;
     }
 
-    .dash-nav-center {
-        display: none;
+    .dash-sidebar {
+        width: 100%;
     }
 
-    .dash-wrapper {
-        padding-top: 82px;
+    .sidebar-menu {
+        position: static;
+        flex-direction: row;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.3rem;
     }
 
-    .dash-main {
-        width: calc(100% - 1rem);
+    .sidebar-link {
+        flex: 1;
+        justify-content: center;
+        text-align: center;
+        padding: 0.7rem 1rem;
+        font-size: 0.78rem;
     }
 
-    .dash-hero {
-        padding: 1.5rem;
-    }
-
-    .quick-section {
+    .stats-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .stats-card {
+        min-height: auto;
     }
 }
