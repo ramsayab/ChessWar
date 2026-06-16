@@ -41,19 +41,6 @@
         <p>Ready for your next match? Jump in and start playing now.</p>
         <a class="play-now-btn" href="/game">Play Now</a>
       </section>
-
-      <section class="quick-section animate animate-2">
-        <div class="quick-card">
-          <h2>Quick Match</h2>
-          <p>Start a fast game and get paired instantly.</p>
-          <a class="quick-link" href="#">Start Match</a>
-        </div>
-        <div class="quick-card">
-          <h2>Continue Playing</h2>
-          <p>Open your active game from the last session.</p>
-          <a class="quick-link" href="#">Open Game</a>
-        </div>
-      </section>
     </main>
   </div>
 

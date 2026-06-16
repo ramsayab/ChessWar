@@ -654,6 +654,9 @@
       engine.makeMove(bestMove);
       let fen = engine.generateFen();
       board.position(fen);
+
+      // Check if engine's move ended the game
+      checkGameStatus();
     }, 300);
   }
 
@@ -681,6 +684,9 @@
     // make user move
     engine.makeMove(validMove);    
     engine.printBoard();
+    
+    // Check if user's move ended the game
+    if (checkGameStatus()) return;
     
     // make engine move
     makeMove();
