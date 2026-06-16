@@ -27,6 +27,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'password',
         'is_admin',
+        'avatar_url',
     ];
 
     /**
@@ -67,5 +68,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function canAccessPanel(Panel $panel): bool
     {
         return true;
+    }
+
+    public function matches()
+    {
+        return $this->hasMany(ChessMatch::class);
     }
 }

@@ -324,6 +324,27 @@
           flex-basis: calc(50% - 0.5rem);
         }
       }
+
+      .power-card.mystery {
+        border-color: rgba(201, 168, 76, 0.45);
+        background: linear-gradient(135deg, rgba(16, 26, 43, 0.95) 0%, rgba(8, 14, 24, 0.98) 100%);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      }
+      
+      .power-card.mystery:hover {
+        transform: translateY(-4px);
+        border-color: var(--game-gold);
+        box-shadow: 0 12px 28px rgba(201, 168, 76, 0.25);
+      }
+
+      .power-card.revealed {
+        animation: cardFlip 0.5s ease-out;
+      }
+
+      @keyframes cardFlip {
+        0% { transform: scale(0.9) rotateY(90deg); opacity: 0; }
+        100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+      }
     </style>
     
   </head>
@@ -339,34 +360,15 @@
             <div class="power-panel__header">
               <p class="power-panel__label">User privilege</p>
               <h2 class="power-panel__title">Select 1 Active Power</h2>
-              <p class="power-panel__hint">Only one power can be active at a time, and it applies to the player side only.</p>
+              <p class="power-panel__hint">Choose one card to reveal your secret power. The bot stays standard.</p>
             </div>
 
             <div class="power-grid" id="power-grid" role="radiogroup" aria-label="Choose active power">
-              <label class="power-card active" data-power="confused_pawn">
-                <input class="power-card__radio" type="radio" name="active_power" value="confused_pawn" checked>
-                <span class="power-card__badge">User only</span>
-                <span class="power-card__name">Confused Pawn</span>
-                <span class="power-card__desc">Pawn can move backward too, making file control much more chaotic.</span>
-              </label>
-
-              <label class="power-card" data-power="blink_knight">
-                <input class="power-card__radio" type="radio" name="active_power" value="blink_knight">
-                <span class="power-card__badge">User only</span>
-                <span class="power-card__name">Blink Knight</span>
-                <span class="power-card__desc">Knight jumps with a longer reach, doubling the usual movement patterns.</span>
-              </label>
-
-              <label class="power-card" data-power="super_rook">
-                <input class="power-card__radio" type="radio" name="active_power" value="super_rook">
-                <span class="power-card__badge">User only</span>
-                <span class="power-card__name">Super Rook</span>
-                <span class="power-card__desc">Rook keeps straight lines and gains one-step forward diagonals.</span>
-              </label>
+              <!-- Dynamically populated and shuffled mystery cards -->
             </div>
 
             <div class="power-state">
-              Active power: <strong id="active-power-label">Confused Pawn</strong>
+              Active power: <strong id="active-power-label">None (Select a card first)</strong>
             </div>
           </div>
 
@@ -376,12 +378,14 @@
           <!-- game controls -->
           <div class="row game-controls">                    
             <!-- -buttons -->
+            @if(auth()->user()->is_admin || auth()->user()->hasRole('super_admin'))
             <div class="col btn-group">
               <button id="newgame" class="btn btn-outline-secondary">New</button>
               <button id="makemove" class="btn btn-outline-secondary">Move</button>
               <button id="takeback" class="btn btn-outline-secondary">Undo</button>
               <button id="flipboard" class="btn btn-outline-secondary">Flip</button>
             </div>
+            @endif
           </div>
         </div>
       </div>
@@ -400,6 +404,88 @@
   \****************************/
   
   
+  let gameStartTime = null;
+
+  function startTimer() {
+    gameStartTime = Date.now();
+  }
+
+  function saveMatchResult(isWin, duration) {
+    $.ajax({
+      url: '/matches',
+      type: 'POST',
+      data: {
+        _token: '{{ csrf_token() }}',
+        is_win: isWin ? 1 : 0,
+        total_time: duration,
+        power_type: window.activePlayerPower
+      },
+      success: function(response) {
+        console.log('Match history saved successfully:', response);
+      },
+      error: function(xhr) {
+        console.error('Failed to save match history:', xhr.responseText);
+      }
+    });
+  }
+
+  function checkGameStatus() {
+    if (!window.engine) return false;
+    
+    const legalMoves = engine.generateLegalMoves();
+    const side = engine.getSide(); // 0 = white, 1 = black
+    const inCheck = engine.inCheck(side);
+    
+    let isGameOver = false;
+    let userWon = false;
+    let draw = false;
+    let reason = "";
+
+    if (legalMoves.length === 0) {
+      isGameOver = true;
+      if (inCheck) {
+        // Checkmate! The side to move has no moves and is in check.
+        if (side === 0) {
+          // User is checkmated (user lost)
+          userWon = false;
+          reason = "Checkmate! Bot wins.";
+        } else {
+          // Bot is checkmated (user won)
+          userWon = true;
+          reason = "Checkmate! You win!";
+        }
+      } else {
+        // Stalemate
+        draw = true;
+        reason = "Draw by Stalemate.";
+      }
+    } else if (engine.isMaterialDraw()) {
+      isGameOver = true;
+      draw = true;
+      reason = "Draw by Insufficient Material.";
+    } else if (engine.isRepetition()) {
+      isGameOver = true;
+      draw = true;
+      reason = "Draw by Repetition.";
+    } else if (engine.getFifty() >= 100) {
+      isGameOver = true;
+      draw = true;
+      reason = "Draw by 50-move rule.";
+    }
+
+    if (isGameOver) {
+      const endTime = Date.now();
+      const duration = gameStartTime ? Math.round((endTime - gameStartTime) / 1000) : 0;
+      
+      alert("Game Over: " + reason);
+      
+      // Save to database
+      saveMatchResult(userWon && !draw, duration);
+      return true;
+    }
+    return false;
+  }
+
   // handle new game button click
   $('#newgame').on('click', function() {
     // reset engine
@@ -407,32 +493,96 @@
     
     // set initial board position
     board.position('start');
+
+    // Reset power selection
+    window.powerSelected = false;
+    window.activePlayerPower = '';
+    $('#active-power-label').text('None (Select a card first)');
+    renderPowers();
   });
 
-  function syncActivePower(card) {
-    $('.power-card').removeClass('active');
-    $(card).addClass('active');
+  window.powerSelected = false;
 
-    const label = $(card).find('.power-card__name').text().trim();
-    const value = $(card).find('.power-card__radio').val();
-
-    $('#active-power-label').text(label);
-    window.activePlayerPower = value;
-    if (window.engine && typeof window.engine.setPlayerPower === 'function') {
-      window.engine.setPlayerPower(value);
+  const powersList = [
+    {
+      value: 'confused_pawn',
+      name: 'Confused Pawn',
+      desc: 'Pawn can move backward too, making file control much more chaotic.'
+    },
+    {
+      value: 'blink_knight',
+      name: 'Blink Knight',
+      desc: 'Knight jumps with a longer reach, doubling the usual movement patterns.'
+    },
+    {
+      value: 'super_rook',
+      name: 'Super Rook',
+      desc: 'Rook keeps straight lines and gains one-step forward diagonals.'
     }
+  ];
+
+  // Shuffle function
+  function shuffle(array) {
+    let currentIndex = array.length, randomIndex;
+    while (currentIndex != 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+    return array;
   }
 
-  $('#power-grid').on('change', 'input[name="active_power"]', function() {
-    syncActivePower(this.closest('.power-card'));
-  });
+  // Shuffle and render
+  const shuffledPowers = shuffle([...powersList]);
+  
+  function renderPowers() {
+    const grid = $('#power-grid');
+    grid.empty();
+    shuffledPowers.forEach((power, index) => {
+      grid.append(`
+        <label class="power-card mystery" data-power="${power.value}" data-index="${index}">
+          <input class="power-card__radio" type="radio" name="active_power" value="${power.value}" style="position: absolute; opacity: 0; pointer-events: none;">
+          <span class="power-card__badge">Mystery Card</span>
+          <span class="power-card__name">???</span>
+          <span class="power-card__desc">Click to select and reveal this power.</span>
+        </label>
+      `);
+    });
+  }
+
+  renderPowers();
 
   $('#power-grid').on('click', '.power-card', function() {
-    const radio = $(this).find('input[name="active_power"]')[0];
-    if (radio && !radio.checked) {
-      radio.checked = true;
-      $(radio).trigger('change');
-    }
+    if (window.powerSelected) return; // Only allow selecting once
+
+    window.powerSelected = true;
+    startTimer(); // Start the game timer
+    const selectedCard = $(this);
+    const chosenIndex = selectedCard.data('index');
+    
+    // Reveal all cards but highlight the selected one
+    $('.power-card').each(function() {
+      const card = $(this);
+      const idx = card.data('index');
+      const power = shuffledPowers[idx];
+      
+      card.removeClass('mystery').addClass('revealed');
+      card.find('.power-card__badge').text('User only');
+      card.find('.power-card__name').text(power.name);
+      card.find('.power-card__desc').text(power.desc);
+      
+      if (idx === chosenIndex) {
+        card.addClass('active');
+        card.find('input[name="active_power"]').prop('checked', true);
+        $('#active-power-label').text(power.name);
+        window.activePlayerPower = power.value;
+        if (window.engine && typeof window.engine.setPlayerPower === 'function') {
+          window.engine.setPlayerPower(power.value);
+        }
+      } else {
+        card.css('opacity', '0.65');
+      }
+    });
   });
   
   // handle make move button click
@@ -554,11 +704,19 @@
    ============================              
   \****************************/
 
+  // on drag start
+  function onDragStart (source, piece, position, orientation) {
+    if (!window.powerSelected) {
+      alert("Please select a mystery card first to unlock your secret power!");
+      return false;
+    }
+  }
+
   // chess board configuration
   var config = {
     draggable: true,
     position: 'start',
-    //onDragStart: onDragStart,
+    onDragStart: onDragStart,
     onDrop: onDrop,
     onSnapEnd: onSnapEnd
   }
@@ -569,6 +727,6 @@
   // create WukongJS engine instance
   const engine = new Engine();
   window.engine = engine;
-  window.activePlayerPower = 'confused_pawn';
-  engine.setPlayerPower(window.activePlayerPower);
+  // Initialize with no power active until one is selected
+  window.activePlayerPower = '';
 </script>

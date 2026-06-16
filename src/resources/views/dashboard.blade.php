@@ -12,7 +12,7 @@
 <body>
   @php
     $user = auth()->user();
-    $displayName = $user?->username ?: ($user?->name ?: 'Player');
+    $displayName = $user?->name ?: ($user?->username ?: 'Player');
     $initial = strtoupper(substr($displayName, 0, 1));
   @endphp
 

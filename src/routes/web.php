@@ -45,3 +45,23 @@ Route::get('/dashboard', function () {
 Route::get('/game', function () {
     return view('game');
 })->middleware('auth')->name('game');
+
+Route::post('/matches', function (Illuminate\Http\Request $request) {
+    $request->validate([
+        'is_win' => 'required|boolean',
+        'total_time' => 'required|integer',
+        'power_type' => 'nullable|string',
+    ]);
+
+    $match = \App\Models\ChessMatch::create([
+        'user_id' => auth()->id(),
+        'is_win' => $request->is_win,
+        'total_time' => $request->total_time,
+        'power_type' => $request->power_type,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'match' => $match,
+    ]);
+})->middleware('auth');
