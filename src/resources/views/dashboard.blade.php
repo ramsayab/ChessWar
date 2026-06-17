@@ -70,7 +70,12 @@
             <p class="dash-kicker">Welcome Back</p>
             <h1>Welcome, {{ $displayName }}</h1>
             <p>Ready for your next match? Jump in, draft your mystery power, and claim victory.</p>
-            <a class="play-now-btn" href="/game">Play Now</a>
+            <div style="display: flex; gap: 1rem; justify-content: flex-start; margin-top: 1.5rem; flex-wrap: wrap;">
+              <a class="play-now-btn" href="/game">Play Now</a>
+              @if(isset($savedGame) && $savedGame)
+                <a class="play-now-btn" href="/game?resume=true" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); box-shadow: none;">Resume Game</a>
+              @endif
+            </div>
           </section>
 
           <section class="stats-grid animate animate-3">

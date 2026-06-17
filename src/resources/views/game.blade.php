@@ -386,6 +386,11 @@
               <button id="flipboard" class="btn btn-outline-secondary">Flip</button>
             </div>
             @endif
+
+            <div class="col btn-group mt-3" style="width: 100%; display: flex; justify-content: center; gap: 0.5rem;">
+              <button id="save-game-btn" class="btn btn-outline-secondary" style="background: rgba(40, 167, 69, 0.12); border-color: rgba(40, 167, 69, 0.35); color: #fff;">Save Game</button>
+              <a href="/dashboard" class="btn btn-outline-secondary">Exit to Dashboard</a>
+            </div>
           </div>
         </div>
       </div>
@@ -735,4 +740,89 @@
   window.engine = engine;
   // Initialize with no power active until one is selected
   window.activePlayerPower = '';
+
+  // Save Game Event Listener
+  $('#save-game-btn').on('click', function() {
+    if (!window.powerSelected) {
+      alert('Please select a card first to start the game before saving.');
+      return;
+    }
+    
+    const currentFen = engine.generateFen() + ' KQkq - 0 1';
+    const currentPower = window.activePlayerPower;
+    
+    $.ajax({
+      url: '/api/game/save',
+      type: 'POST',
+      data: {
+        _token: '{{ csrf_token() }}',
+        fen: currentFen,
+        power_type: currentPower
+      },
+      success: function(response) {
+        alert('Game state saved successfully! You can resume this match later from the dashboard.');
+      },
+      error: function(xhr) {
+        alert('Failed to save game state: ' + xhr.responseText);
+      }
+    });
+  });
+
+  // Resume Game Logic on load
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('resume') === 'true') {
+    $.ajax({
+      url: '/api/game/resume',
+      type: 'GET',
+      success: function(response) {
+        if (response.success && response.saved_game) {
+          const savedGame = response.saved_game;
+          
+          // Set board FEN in engine and board UI
+          let fenToLoad = savedGame.fen;
+          if (fenToLoad.split(' ').length < 6) {
+            fenToLoad += ' KQkq - 0 1';
+          }
+          engine.setBoard(fenToLoad);
+          board.position(fenToLoad);
+          
+          // Set active player power
+          window.activePlayerPower = savedGame.power_type;
+          window.powerSelected = true;
+          
+          if (typeof engine.setPlayerPower === 'function') {
+            engine.setPlayerPower(savedGame.power_type);
+          }
+          
+          // Reveal the selected card and hide others in the UI
+          const power = powersList.find(p => p.value === savedGame.power_type);
+          const powerName = power ? power.name : 'None';
+          
+          $('#active-power-label').text(powerName);
+          
+          // Select and highlight the card in the grid
+          const grid = $('#power-grid');
+          grid.empty();
+          
+          powersList.forEach((p, idx) => {
+            const isSelected = p.value === savedGame.power_type;
+            grid.append(`
+              <label class="power-card revealed ${isSelected ? 'active' : ''}" data-power="${p.value}" data-index="${idx}" style="${isSelected ? '' : 'opacity: 0.65;'}">
+                <input class="power-card__radio" type="radio" name="active_power" value="${p.value}" ${isSelected ? 'checked' : ''} style="position: absolute; opacity: 0; pointer-events: none;">
+                <span class="power-card__badge">User only</span>
+                <span class="power-card__name">${p.name}</span>
+                <span class="power-card__desc">${p.desc}</span>
+              </label>
+            `);
+          });
+          
+          // Start the play duration timer
+          startTimer();
+        }
+      },
+      error: function(xhr) {
+        console.error('Failed to resume game:', xhr.responseText);
+      }
+    });
+  }
 </script>
