@@ -74,4 +74,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return $this->hasMany(ChessMatch::class);
     }
+
+    public function savedGame()
+    {
+        return $this->hasOne(SavedGame::class);
+    }
 }
