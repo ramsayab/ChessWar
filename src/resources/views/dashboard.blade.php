@@ -137,7 +137,10 @@
                   $powers = [
                     'blink_knight' => 'Blink Knight',
                     'super_rook' => 'Super Rook',
-                    'confused_pawn' => 'Confused Pawn'
+                    'confused_pawn' => 'Confused Pawn',
+                    'undying_king' => 'Undying King',
+                    'omni_queen' => 'Omni Queen',
+                    'grey_bishop' => 'Grey Bishop'
                   ];
                   $totalPowersUsed = array_sum($powerCounts);
                 @endphp
@@ -214,14 +217,15 @@
                         $minutes = floor($match->total_time / 60);
                         $seconds = $match->total_time % 60;
                         
-                        $powerName = 'None';
-                        if ($match->power_type === 'blink_knight') {
-                            $powerName = 'Blink Knight';
-                        } elseif ($match->power_type === 'super_rook') {
-                            $powerName = 'Super Rook';
-                        } elseif ($match->power_type === 'confused_pawn') {
-                            $powerName = 'Confused Pawn';
-                        }
+                        $powersMap = [
+                          'blink_knight' => 'Blink Knight',
+                          'super_rook' => 'Super Rook',
+                          'confused_pawn' => 'Confused Pawn',
+                          'undying_king' => 'Undying King',
+                          'omni_queen' => 'Omni Queen',
+                          'grey_bishop' => 'Grey Bishop',
+                        ];
+                        $powerName = $powersMap[$match->power_type] ?? 'None';
                       @endphp
                       <tr>
                         <td>{{ $matches->count() - $index }}</td>

@@ -160,6 +160,7 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
     var searchPly = 0;
     var gamePly = 0;
     var playerPower = "confused_pawn";
+    var kingLives = 2;
 
     var pieceList = {
         [P]: 0,
@@ -244,6 +245,7 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         moveStack = [];
         searchPly = 0;
         gamePly = 0;
+        kingLives = 2;
         for (let i in repetitionTable) repetitionTable[i] = 0;
     }
 
@@ -296,7 +298,7 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
     }
 
     function setPlayerPower(power) {
-        const valid = ["blink_knight", "super_rook", "confused_pawn"];
+        const valid = ["blink_knight", "super_rook", "confused_pawn", "undying_king", "omni_queen", "grey_bishop"];
         playerPower = valid.includes(power) ? power : "confused_pawn";
     }
     function getPlayerPower() {
@@ -353,6 +355,33 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
   \****************************/
 
     function isSquareAttacked(square, color) {
+        if (color === white && playerPower === "omni_queen") {
+            for (let d = 0; d < knightOffsets.length; d++) {
+                const tgt = square + knightOffsets[d];
+                if (!(tgt & 0x88) && board[tgt] === Q) return true;
+            }
+        }
+
+        if (color === white && playerPower === "grey_bishop") {
+            for (let s of [-1, 1]) {
+                const adj = square + s;
+                if (!(adj & 0x88) && board[adj] === B) return true;
+            }
+            const diagDirs = [15, 17, -15, -17];
+            for (let d = 0; d < diagDirs.length; d++) {
+                let mid = square;
+                while (true) {
+                    mid += diagDirs[d];
+                    if (mid & 0x88) break;
+                    if (board[mid] !== e) break;
+                    for (let s of [-1, 1]) {
+                        const bsq = mid + s;
+                        if (!(bsq & 0x88) && board[bsq] === B) return true;
+                    }
+                }
+            }
+        }
+
         for (let pt = QUEEN; pt >= KING; pt--) {
             const piece = pt | (color << 3);
             if (pt === PAWN) {
@@ -566,6 +595,55 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
                 }
             }
         }
+
+        // Omni Queen Knight jump bonus
+        if (pt === QUEEN && side === white && playerPower === "omni_queen") {
+            const knightDirs = knightOffsets;
+            for (let d = 0; d < knightDirs.length; d++) {
+                const tgt = src + knightDirs[d];
+                if (tgt & 0x88) continue;
+                const tp = mapToOptimized[board[tgt]];
+                if (tp !== e) {
+                    if (mapColor[tp & 0x08] !== side)
+                        addMove(moveList, encodeMove(src, tgt, 0, 1, 0, 0, 0));
+                } else if (!isCaptures) {
+                    addMove(moveList, encodeMove(src, tgt, 0, 0, 0, 0, 0));
+                }
+            }
+        }
+
+        // Grey Bishop shift and diagonal slide bonus
+        if (pt === BISHOP && side === white && playerPower === "grey_bishop") {
+            const shifts = [-1, 1];
+            for (let s = 0; s < shifts.length; s++) {
+                const mid = src + shifts[s];
+                if (!(mid & 0x88) && board[mid] === e) {
+                    // mid is empty, we can move there (non-capture)
+                    if (!isCaptures) {
+                        addMove(moveList, encodeMove(src, mid, 0, 0, 0, 0, 0));
+                    }
+                    // slide diagonally from mid
+                    const diagDirs = [15, 17, -15, -17];
+                    for (let d = 0; d < diagDirs.length; d++) {
+                        let tgt = mid;
+                        while (true) {
+                            tgt += diagDirs[d];
+                            if (tgt & 0x88) break;
+                            const tp = mapToOptimized[board[tgt]];
+                            if (tp !== e) {
+                                if (mapColor[tp & 0x08] !== side) {
+                                    addMove(moveList, encodeMove(src, tgt, 0, 1, 0, 0, 0));
+                                }
+                                break;
+                            }
+                            if (!isCaptures) {
+                                addMove(moveList, encodeMove(src, tgt, 0, 0, 0, 0, 0));
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     function _genCastling(moveList) {
@@ -693,6 +771,24 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
                 moveStack[moveStack.length - 1].capturedPiece = capPiece;
                 hashKey ^= pieceKeys[capPiece * 128 + tgt];
                 removePiece(capPiece, tgt);
+
+                // Undying King Trigger
+                if (capPiece === K && playerPower === "undying_king" && kingLives === 2) {
+                    kingLives = 1;
+                    const top = moveStack.length - 1;
+                    moveStack[top].undyingKingTriggered = true;
+                    const attacker = board[tgt];
+                    moveStack[top].attackerPiece = attacker;
+
+                    // Remove attacker from tgt
+                    removePiece(attacker, tgt);
+                    hashKey ^= pieceKeys[attacker * 128 + tgt];
+                    board[tgt] = e;
+
+                    // Restore King at tgt
+                    addPiece(K, tgt);
+                    kingSquare[white] = tgt;
+                }
             }
             fifty = 0;
         } else if (board[tgt] === P || board[tgt] === p) fifty = 0;
@@ -730,7 +826,7 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             }
         }
 
-        if (promo) {
+        if (promo && !moveStack[moveStack.length - 1].undyingKingTriggered) {
             if (side === white) {
                 hashKey ^= pieceKeys[P * 128 + tgt];
                 removePiece(P, tgt);
@@ -741,7 +837,13 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             addPiece(promo, tgt);
         }
 
-        if (board[tgt] === K || board[tgt] === k) kingSquare[side] = tgt;
+        if (board[tgt] === K) {
+            if (!(playerPower === "undying_king" && moveStack[moveStack.length - 1].undyingKingTriggered)) {
+                kingSquare[white] = tgt;
+            }
+        } else if (board[tgt] === k) {
+            kingSquare[black] = tgt;
+        }
 
         hashKey ^= castleKeys[castle];
         castle &= castlingRights[src];
@@ -752,6 +854,10 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         hashKey ^= sideKey;
 
         if (isSquareAttacked(kingSquare[side ^ 1], side)) {
+            if (side ^ 1 === white && playerPower === "undying_king" && kingLives === 2) {
+                // Allow White to stay in check or move into check if they have 2 lives
+                return 1;
+            }
             takeBack();
             return 0;
         }
@@ -765,6 +871,20 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
         const move = moveStack[top].move;
         const src = getMoveSource(move);
         const tgt = getMoveTarget(move);
+
+        if (moveStack[top].undyingKingTriggered) {
+            const attacker = moveStack[top].attackerPiece;
+            addPiece(attacker, src);
+            kingLives = 2;
+
+            side = moveStack[top].side;
+            enpassant = moveStack[top].enpassant;
+            castle = moveStack[top].castle;
+            hashKey = moveStack[top].hash;
+            fifty = moveStack[top].fifty;
+            moveStack.pop();
+            return;
+        }
 
         moveCurrentPiece(board[tgt], tgt, src);
 
@@ -1619,6 +1739,12 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
                 : noEnpassant;
         fifty = parseInt(fen.slice(idx).split(" ")[1]);
         gamePly = parseInt(fen.slice(idx).split(" ")[2]) * 2;
+        const parts = fen.split(" ");
+        if (parts[6]) {
+            kingLives = parseInt(parts[6]) || 2;
+        } else {
+            kingLives = 2;
+        }
         hashKey = generateHashKey();
         initPieceList();
     }
@@ -1656,7 +1782,7 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             if (empty) fen += empty;
             if (rank < 7) fen += "/";
         }
-        fen += " " + (engine.getSide() ? "b" : "w");
+        fen += " " + (side ? "b" : "w");
         return fen;
     }
 
@@ -1905,12 +2031,13 @@ var Engine = function (boardSize, lightSquare, darkSquare, selectColor) {
             timing.timeSet = 1;
             timing.time = ms;
             timing.stopTime = Date.now() + ms;
-            return engine.search(64);
+            return searchPosition(64);
         },
 
         // misc
         setPlayerPower: (pw) => setPlayerPower(pw),
         getPlayerPower: () => getPlayerPower(),
+        getKingLives: () => kingLives,
         isMaterialDraw: () => isMaterialDraw(),
         takeBack: () => {
             if (moveStack.length) takeBack();

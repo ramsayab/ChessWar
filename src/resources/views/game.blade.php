@@ -310,6 +310,12 @@
         flex: 1 1 90px;
       }
 
+      @media (max-width: 768px) {
+        .power-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
       @media (max-width: 576px) {
         .game-scene {
           padding: 20px 12px;
@@ -322,6 +328,10 @@
 
         .game-controls .btn-group > .btn {
           flex-basis: calc(50% - 0.5rem);
+        }
+
+        .power-grid {
+          grid-template-columns: 1fr;
         }
       }
 
@@ -523,8 +533,37 @@
       value: 'super_rook',
       name: 'Super Rook',
       desc: 'Rook keeps straight lines and gains one-step forward diagonals.'
+    },
+    {
+      value: 'undying_king',
+      name: 'Undying King',
+      desc: 'King has 2 lives. The enemy piece that captures the King dies, and the King is restored.'
+    },
+    {
+      value: 'omni_queen',
+      name: 'Omni Queen',
+      desc: 'Queen can move like a Queen and jump like a Knight.'
+    },
+    {
+      value: 'grey_bishop',
+      name: 'Grey Bishop',
+      desc: 'Bishop can shift 1 step left/right (changing square color) and then slide diagonally.'
     }
   ];
+
+  let lastKingLives = 2;
+  function updateKingLivesUI() {
+    if (window.engine && typeof window.engine.getKingLives === 'function') {
+      const lives = window.engine.getKingLives();
+      if (window.activePlayerPower === 'undying_king') {
+        $('#active-power-label').text(`Undying King (${lives} lives remaining)`);
+        if (lives === 1 && lastKingLives === 2) {
+          alert("Your Undying King lost a life! The attacking piece has been destroyed.");
+        }
+      }
+      lastKingLives = lives;
+    }
+  }
 
   // Shuffle function
   function shuffle(array) {
@@ -579,10 +618,14 @@
       if (idx === chosenIndex) {
         card.addClass('active');
         card.find('input[name="active_power"]').prop('checked', true);
-        $('#active-power-label').text(power.name);
         window.activePlayerPower = power.value;
         if (window.engine && typeof window.engine.setPlayerPower === 'function') {
           window.engine.setPlayerPower(power.value);
+        }
+        lastKingLives = 2;
+        updateKingLivesUI();
+        if (power.value !== 'undying_king') {
+          $('#active-power-label').text(power.name);
         }
       } else {
         card.css('opacity', '0.65');
@@ -657,6 +700,10 @@
     setTimeout(function() {
       let bestMove = engine.searchTime(1000); // search for 1 second
       engine.makeMove(bestMove);
+      
+      // Update King Lives UI if Undying King triggered
+      updateKingLivesUI();
+      
       let fen = engine.generateFen();
       board.position(fen);
 
@@ -748,7 +795,8 @@
       return;
     }
     
-    const currentFen = engine.generateFen() + ' KQkq - 0 1';
+    const lives = (engine.getKingLives && typeof engine.getKingLives === 'function') ? engine.getKingLives() : 2;
+    const currentFen = engine.generateFen() + ' KQkq - 0 1 ' + lives;
     const currentPower = window.activePlayerPower;
     
     $.ajax({
@@ -798,7 +846,12 @@
           const power = powersList.find(p => p.value === savedGame.power_type);
           const powerName = power ? power.name : 'None';
           
-          $('#active-power-label').text(powerName);
+          const lives = (engine.getKingLives && typeof engine.getKingLives === 'function') ? engine.getKingLives() : 2;
+          lastKingLives = lives;
+          updateKingLivesUI();
+          if (savedGame.power_type !== 'undying_king') {
+            $('#active-power-label').text(powerName);
+          }
           
           // Select and highlight the card in the grid
           const grid = $('#power-grid');

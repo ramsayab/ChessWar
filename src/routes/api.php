@@ -69,6 +69,21 @@ Route::middleware('auth')->group(function () {
                     'value' => 'confused_pawn',
                     'name' => 'Confused Pawn',
                     'description' => 'Pawn can move backward too, making file control much more chaotic.'
+                ],
+                [
+                    'value' => 'undying_king',
+                    'name' => 'Undying King',
+                    'description' => 'King has 2 lives. The enemy piece that captures the King dies, and the King is restored.'
+                ],
+                [
+                    'value' => 'omni_queen',
+                    'name' => 'Omni Queen',
+                    'description' => 'Queen can move like a Queen and jump like a Knight.'
+                ],
+                [
+                    'value' => 'grey_bishop',
+                    'name' => 'Grey Bishop',
+                    'description' => 'Bishop can shift 1 step left/right (changing square color) and then slide diagonally.'
                 ]
             ]
         ]);
