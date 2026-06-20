@@ -74,11 +74,7 @@ class AuthController extends Controller
             return redirect()->route('auth.google.mock');
         }
 
-        try {
-            return Socialite::driver('google')->redirect();
-        } catch (\Exception $e) {
-            return redirect()->route('auth.google.mock');
-        }
+        return Socialite::driver('google')->redirect();
     }
 
     public function handleGoogleCallback(Request $request)
