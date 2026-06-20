@@ -135,6 +135,6 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect('/dashboard');
+        return view('auth.google_callback_success');
     }
 }

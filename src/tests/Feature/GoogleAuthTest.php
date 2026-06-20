@@ -22,7 +22,8 @@ test('google mock callback logs in a user and redirects to dashboard', function 
         'avatar_url' => 'https://example.com/avatar.png'
     ]));
     
-    $response->assertRedirect('/dashboard');
+    $response->assertStatus(200);
+    $response->assertSee('/dashboard');
     $this->assertDatabaseHas('users', [
         'email' => $email,
         'name' => $name,

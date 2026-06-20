@@ -355,6 +355,32 @@
         0% { transform: scale(0.9) rotateY(90deg); opacity: 0; }
         100% { transform: scale(1) rotateY(0deg); opacity: 1; }
       }
+
+      /* Square highlight guides for valid moves */
+      .square-55d63.highlight-hint::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(201, 168, 76, 0.65);
+        pointer-events: none;
+        z-index: 99;
+        box-shadow: 0 0 8px rgba(201, 168, 76, 0.4);
+      }
+
+      /* Capture guide (ring surrounding piece) */
+      .square-55d63.highlight-hint.has-piece::after {
+        width: 84%;
+        height: 84%;
+        border-radius: 50%;
+        border: 4px solid rgba(201, 168, 76, 0.8);
+        background: transparent;
+        box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
+      }
     </style>
     
   </head>
@@ -409,6 +435,52 @@
 </html>
 
 <script>
+  let selectedSquare = null;
+
+  function removeHighlights() {
+    $('.square-55d63').removeClass('highlight-hint has-piece');
+  }
+
+  function highlightSquareMoves(square) {
+    removeHighlights();
+    
+    if (!window.powerSelected) return;
+    
+    // Convert algebraic (e.g. 'e2') to 0x88 index
+    const srcSq = square[0].charCodeAt() - "a".charCodeAt() + (8 - (square[1].charCodeAt() - "0".charCodeAt())) * 16;
+    const pc = engine.getPiece(srcSq);
+    if (pc === 0) return;
+    
+    const activeSide = engine.getSide();
+    const isPlayerPiece = (activeSide === 0 && pc >= 1 && pc <= 6) || (activeSide === 1 && pc >= 7 && pc <= 12);
+    if (!isPlayerPiece) return;
+    
+    const legalMoves = engine.generateLegalMoves();
+    legalMoves.forEach(lm => {
+      const mv = lm.move;
+      if (engine.getMoveSource(mv) === srcSq) {
+        const tgtSq = engine.getMoveTarget(mv);
+        const tgtStr = engine.squareToString(tgtSq);
+        
+        const tgtEl = $('.square-' + tgtStr);
+        tgtEl.addClass('highlight-hint');
+        
+        if (engine.getPiece(tgtSq) !== 0) {
+          tgtEl.addClass('has-piece');
+        }
+      }
+    });
+  }
+
+  function onMouseoverSquare (square, piece) {
+    if (selectedSquare) return;
+    highlightSquareMoves(square);
+  }
+
+  function onMouseoutSquare (square, piece) {
+    if (selectedSquare) return;
+    removeHighlights();
+  }
 
   /****************************\
    ============================
@@ -714,6 +786,9 @@
 
   // on dropping piece
   function onDrop (source, target) {
+    removeHighlights();
+    selectedSquare = null;
+
     let promotedPiece = (engine.getSide() ? (5 + 6): 5) // queen promotion only for now
     let move = source + target + engine.promotedToString(promotedPiece);
     let validMove = engine.moveFromString(move);
@@ -768,6 +843,14 @@
       alert("Please select a mystery card first to unlock your secret power!");
       return false;
     }
+
+    // Only allow dragging if it is White's turn (user's turn) and the piece is White
+    if (engine.getSide() !== 0 || piece.search(/^w/) === -1) {
+      return false;
+    }
+
+    selectedSquare = null;
+    highlightSquareMoves(source);
   }
 
   // chess board configuration
@@ -776,11 +859,42 @@
     position: 'start',
     onDragStart: onDragStart,
     onDrop: onDrop,
-    onSnapEnd: onSnapEnd
+    onSnapEnd: onSnapEnd,
+    onMouseoverSquare: onMouseoverSquare,
+    onMouseoutSquare: onMouseoutSquare
   }
   
   // create chess board widget instance
   var board = Chessboard('chessboard', config)
+
+  // Bind click event for valid move highlights
+  $('#chessboard').on('click', '.square-55d63', function() {
+    if (!window.powerSelected) return;
+    
+    const classList = $(this).attr('class').split(/\s+/);
+    const squareClass = classList.find(c => c.startsWith('square-') && c !== 'square-55d63');
+    if (!squareClass) return;
+    
+    const square = squareClass.substring(7); // e.g. 'e2'
+    
+    const srcSq = square[0].charCodeAt() - "a".charCodeAt() + (8 - (square[1].charCodeAt() - "0".charCodeAt())) * 16;
+    const pc = engine.getPiece(srcSq);
+    const activeSide = engine.getSide();
+    const isPlayerPiece = (activeSide === 0 && pc >= 1 && pc <= 6) || (activeSide === 1 && pc >= 7 && pc <= 12);
+    
+    if (isPlayerPiece) {
+      if (selectedSquare === square) {
+        selectedSquare = null;
+        removeHighlights();
+      } else {
+        selectedSquare = square;
+        highlightSquareMoves(square);
+      }
+    } else {
+      selectedSquare = null;
+      removeHighlights();
+    }
+  });
   
   // create WukongJS engine instance
   const engine = new Engine();
