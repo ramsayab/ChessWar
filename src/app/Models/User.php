@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'password',
         'is_admin',
         'avatar_url',
+        'google_id',
     ];
 
     /**
@@ -57,7 +58,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function getFilamentAvatarUrl(): ?string
     {
         if ($this->avatar_url) {
-            return asset('storage/' . $this->avatar_url);
+            return filter_var($this->avatar_url, FILTER_VALIDATE_URL) 
+                ? $this->avatar_url 
+                : asset('storage/' . $this->avatar_url);
         } else {
             $hash = md5(strtolower(trim($this->email)));
 

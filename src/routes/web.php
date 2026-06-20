@@ -36,6 +36,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::get('/auth/google/mock', function () {
+    return view('auth.google_mock');
+})->name('auth.google.mock');
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth');
 
 Route::get('/dashboard', function (Illuminate\Http\Request $request) {

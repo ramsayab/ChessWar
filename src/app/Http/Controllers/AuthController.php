@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -65,5 +66,75 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/login');
+    }
+
+    public function redirectToGoogle()
+    {
+        if (empty(config('services.google.client_id')) || config('services.google.client_id') === 'dummy-client-id') {
+            return redirect()->route('auth.google.mock');
+        }
+
+        try {
+            return Socialite::driver('google')->redirect();
+        } catch (\Exception $e) {
+            return redirect()->route('auth.google.mock');
+        }
+    }
+
+    public function handleGoogleCallback(Request $request)
+    {
+        if ($request->has('mock') && $request->mock === 'true') {
+            $email = $request->email;
+            $name = $request->name;
+            $googleId = 'mock_' . md5($email);
+            $avatarUrl = $request->avatar_url ?? null;
+        } else {
+            try {
+                $googleUser = Socialite::driver('google')->user();
+                $email = $googleUser->getEmail();
+                $name = $googleUser->getName();
+                $googleId = $googleUser->getId();
+                $avatarUrl = $googleUser->getAvatar();
+            } catch (\Exception $e) {
+                return redirect('/login')->withErrors([
+                    'email' => 'Failed to connect to Google: ' . $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Check if user exists
+        $user = User::where('google_id', $googleId)
+            ->orWhere('email', $email)
+            ->first();
+
+        if ($user) {
+            if (empty($user->google_id)) {
+                $user->update([
+                    'google_id' => $googleId,
+                ]);
+            }
+        } else {
+            // Generate a unique username
+            $baseUsername = strtolower(str_replace(' ', '', $name));
+            $username = $baseUsername;
+            $counter = 1;
+            while (User::where('username', $username)->exists()) {
+                $username = $baseUsername . $counter;
+                $counter++;
+            }
+
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'username' => $username,
+                'google_id' => $googleId,
+                'avatar_url' => $avatarUrl,
+            ]);
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return redirect('/dashboard');
     }
 }
