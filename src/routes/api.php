@@ -127,4 +127,46 @@ Route::middleware('auth')->group(function () {
             'saved_game' => $savedGame,
         ]);
     });
+
+    // 6. Chess Analysis - Move Evaluation
+    Route::post('/game/evaluate-move', function (Illuminate\Http\Request $request, \App\Services\ChessAnalysisService $chessAnalysisService) {
+        $request->validate([
+            'fen_before' => 'required|string',
+            'fen_after' => 'required|string',
+            'is_white_turn' => 'required|boolean',
+            'move' => 'nullable|string',
+        ]);
+
+        $result = $chessAnalysisService->evaluateMove(
+            $request->fen_before,
+            $request->fen_after,
+            $request->is_white_turn,
+            $request->move
+        );
+
+        if (!$result['success']) {
+            return response()->json($result, 400);
+        }
+
+        return response()->json($result);
+    });
+
+    // 7. Chess Analysis - Position Evaluation
+    Route::post('/game/evaluate-position', function (Illuminate\Http\Request $request, \App\Services\ChessAnalysisService $chessAnalysisService) {
+        $request->validate([
+            'fen' => 'required|string',
+            'depth' => 'nullable|integer|min:1|max:18',
+        ]);
+
+        $result = $chessAnalysisService->evaluatePosition(
+            $request->fen,
+            $request->input('depth', 12)
+        );
+
+        if (!$result['success']) {
+            return response()->json($result, 400);
+        }
+
+        return response()->json($result);
+    });
 });

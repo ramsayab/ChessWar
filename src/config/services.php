@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URL'),
     ],
 
+    'chess_api' => [
+        'url' => env('CHESS_API_URL', 'https://chess-api.com/v1'),
+    ],
+
 ];
