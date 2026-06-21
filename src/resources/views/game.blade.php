@@ -381,6 +381,37 @@
         background: transparent;
         box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
       }
+
+      /* Card Shuffling Animation */
+      .shuffling-card {
+        animation: cardShuffleEffect 1.2s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      @keyframes cardShuffleEffect {
+        0% { transform: translateY(0) scale(1); z-index: 1; filter: brightness(1); }
+        25% { transform: translateY(12px) scale(0.95) rotate(-2deg); z-index: 0; filter: brightness(0.85); }
+        50% { transform: translateY(0) scale(0.9) rotate(0); z-index: 0; filter: brightness(0.7); }
+        75% { transform: translateY(-12px) scale(1.05) rotate(2deg); z-index: 2; filter: brightness(1.1); }
+        100% { transform: translateY(0) scale(1); z-index: 1; filter: brightness(1); }
+      }
+
+      .shuffle-status-banner {
+        font-size: 0.85rem;
+        color: var(--game-gold);
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-top: 15px;
+        font-weight: 500;
+      }
+      
+      .shuffle-status-banner.shuffling {
+        animation: blinker 1.5s linear infinite;
+      }
+
+      @keyframes blinker {
+        50% { opacity: 0.3; }
+      }
     </style>
     
   </head>
@@ -392,7 +423,7 @@
           <h1 class="game-title">Battle Arena</h1>
           <p class="game-subtitle">Choose one user power before the match starts. The bot stays standard.</p>
 
-          <div class="power-panel">
+          <div class="power-panel" id="power-panel">
             <div class="power-panel__header">
               <p class="power-panel__label">User privilege</p>
               <h2 class="power-panel__title">Select 1 Active Power</h2>
@@ -403,29 +434,39 @@
               <!-- Dynamically populated and shuffled mystery cards -->
             </div>
 
-            <div class="power-state">
-              Active power: <strong id="active-power-label">None (Select a card first)</strong>
+            <div id="shuffle-status" class="shuffle-status-banner shuffling">
+              Shuffling custom powers...
             </div>
           </div>
 
-          <!-- chess board view -->
-          <div id="chessboard" class=" mb-2 mt-5" style="width: 400px;"></div>
-      
-          <!-- game controls -->
-          <div class="row game-controls">                    
-            <!-- -buttons -->
-            @if(auth()->user()->is_admin || auth()->user()->hasRole('super_admin'))
-            <div class="col btn-group">
-              <button id="newgame" class="btn btn-outline-secondary">New</button>
-              <button id="makemove" class="btn btn-outline-secondary">Move</button>
-              <button id="takeback" class="btn btn-outline-secondary">Undo</button>
-              <button id="flipboard" class="btn btn-outline-secondary">Flip</button>
-            </div>
-            @endif
+          <!-- active power header -->
+          <div id="active-power-header" style="display: none; margin-bottom: 24px; padding: 12px 24px; border-radius: 16px; background: rgba(201, 168, 76, 0.08); border: 1px solid rgba(201, 168, 76, 0.18); text-align: center; max-width: 400px; margin-left: auto; margin-right: auto;">
+              <span style="font-size: 0.75rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--game-gold); display: block; margin-bottom: 4px;">Active Power</span>
+              <h2 id="active-power-title" style="font-family: 'Cormorant Garamond', serif; font-size: 2.1rem; color: #fff7e4; margin: 0; line-height: 1.1;">-</h2>
+              <p id="active-power-desc" style="color: rgba(244, 239, 227, 0.74); font-size: 0.95rem; margin: 6px 0 0;"></p>
+              <div id="king-lives-indicator" style="display: none; margin-top: 8px; font-size: 0.9rem; color: #ff5252; font-weight: 500;"></div>
+          </div>
 
-            <div class="col btn-group mt-3" style="width: 100%; display: flex; justify-content: center; gap: 0.5rem;">
-              <button id="save-game-btn" class="btn btn-outline-secondary" style="background: rgba(40, 167, 69, 0.12); border-color: rgba(40, 167, 69, 0.35); color: #fff;">Save Game</button>
-              <a href="/dashboard" class="btn btn-outline-secondary">Exit to Dashboard</a>
+          <div id="game-play-area" style="display: none;">
+            <!-- chess board view -->
+            <div id="chessboard" class=" mb-2 mt-5" style="width: 400px;"></div>
+        
+            <!-- game controls -->
+            <div class="row game-controls">                    
+              <!-- -buttons -->
+              @if(auth()->user()->is_admin || auth()->user()->hasRole('super_admin'))
+              <div class="col btn-group">
+                <button id="newgame" class="btn btn-outline-secondary">New</button>
+                <button id="makemove" class="btn btn-outline-secondary">Move</button>
+                <button id="takeback" class="btn btn-outline-secondary">Undo</button>
+                <button id="flipboard" class="btn btn-outline-secondary">Flip</button>
+              </div>
+              @endif
+
+              <div class="col btn-group mt-3" style="width: 100%; display: flex; justify-content: center; gap: 0.5rem;">
+                <button id="save-game-btn" class="btn btn-outline-secondary" style="background: rgba(40, 167, 69, 0.12); border-color: rgba(40, 167, 69, 0.35); color: #fff;">Save Game</button>
+                <a href="/dashboard" class="btn btn-outline-secondary">Exit to Dashboard</a>
+              </div>
             </div>
           </div>
         </div>
@@ -578,17 +619,24 @@
     // reset engine
     engine.setBoard(engine.START_FEN);
     
-    // set initial board position
-    board.position('start');
-
     // Reset power selection
     window.powerSelected = false;
     window.activePlayerPower = '';
-    $('#active-power-label').text('None (Select a card first)');
-    renderPowers();
+    
+    // Hide active power header and board area
+    $('#active-power-header').hide();
+    $('#game-play-area').hide();
+    
+    // Show power panel
+    $('#power-panel').show();
+
+    // Start shuffling animation again!
+    runShufflingAnimation();
   });
 
   window.powerSelected = false;
+  window.isShuffling = true;
+  window.currentShuffledPowers = [];
 
   const powersList = [
     {
@@ -628,10 +676,12 @@
     if (window.engine && typeof window.engine.getKingLives === 'function') {
       const lives = window.engine.getKingLives();
       if (window.activePlayerPower === 'undying_king') {
-        $('#active-power-label').text(`Undying King (${lives} lives remaining)`);
+        $('#king-lives-indicator').show().text(`Lives remaining: ${lives} / 2`);
         if (lives === 1 && lastKingLives === 2) {
           alert("Your Undying King lost a life! The attacking piece has been destroyed.");
         }
+      } else {
+        $('#king-lives-indicator').hide();
       }
       lastKingLives = lives;
     }
@@ -648,60 +698,75 @@
     return array;
   }
 
-  // Shuffle and render
-  const shuffledPowers = shuffle([...powersList]);
-  
-  function renderPowers() {
+  function runShufflingAnimation() {
+    window.isShuffling = true;
     const grid = $('#power-grid');
     grid.empty();
-    shuffledPowers.forEach((power, index) => {
+    
+    // Shuffle the powers
+    window.currentShuffledPowers = shuffle([...powersList]);
+    
+    // Append cards with staggered animation delays
+    window.currentShuffledPowers.forEach((power, index) => {
       grid.append(`
-        <label class="power-card mystery" data-power="${power.value}" data-index="${index}">
+        <label class="power-card mystery shuffling-card" data-power="${power.value}" data-index="${index}" style="animation-delay: ${index * 0.1}s;">
           <input class="power-card__radio" type="radio" name="active_power" value="${power.value}" style="position: absolute; opacity: 0; pointer-events: none;">
           <span class="power-card__badge">Mystery Card</span>
           <span class="power-card__name">???</span>
-          <span class="power-card__desc">Click to select and reveal this power.</span>
+          <span class="power-card__desc">Shuffling powers...</span>
         </label>
       `);
     });
+
+    $('#shuffle-status').addClass('shuffling').text('Shuffling custom powers...');
+
+    // Stop shuffling after 2000ms
+    setTimeout(function() {
+      window.isShuffling = false;
+      $('.power-card').removeClass('shuffling-card');
+      $('.power-card').find('.power-card__desc').text('Click to select and reveal this power.');
+      $('#shuffle-status').removeClass('shuffling').text('Choose one card to select your power.');
+    }, 2000);
   }
 
-  renderPowers();
-
   $('#power-grid').on('click', '.power-card', function() {
+    if (window.isShuffling) return; // Prevent selection while shuffling
     if (window.powerSelected) return; // Only allow selecting once
 
     window.powerSelected = true;
     startTimer(); // Start the game timer
+    
     const selectedCard = $(this);
     const chosenIndex = selectedCard.data('index');
+    const power = window.currentShuffledPowers[chosenIndex];
+    if (!power) return;
+
+    window.activePlayerPower = power.value;
+    if (window.engine && typeof window.engine.setPlayerPower === 'function') {
+      window.engine.setPlayerPower(power.value);
+    }
     
-    // Reveal all cards but highlight the selected one
-    $('.power-card').each(function() {
-      const card = $(this);
-      const idx = card.data('index');
-      const power = shuffledPowers[idx];
+    lastKingLives = 2;
+
+    // Populate active header details
+    $('#active-power-title').text(power.name);
+    $('#active-power-desc').text(power.desc);
+    updateKingLivesUI();
+
+    // Slide up cards panel
+    $('#power-panel').slideUp(300, function() {
+      // Fade in active power header
+      $('#active-power-header').fadeIn(200);
       
-      card.removeClass('mystery').addClass('revealed');
-      card.find('.power-card__badge').text('User only');
-      card.find('.power-card__name').text(power.name);
-      card.find('.power-card__desc').text(power.desc);
-      
-      if (idx === chosenIndex) {
-        card.addClass('active');
-        card.find('input[name="active_power"]').prop('checked', true);
-        window.activePlayerPower = power.value;
-        if (window.engine && typeof window.engine.setPlayerPower === 'function') {
-          window.engine.setPlayerPower(power.value);
+      // Fade in play area and render board
+      $('#game-play-area').fadeIn(300, function() {
+        if (!board) {
+          board = Chessboard('chessboard', config);
+        } else {
+          board.position('start');
         }
-        lastKingLives = 2;
-        updateKingLivesUI();
-        if (power.value !== 'undying_king') {
-          $('#active-power-label').text(power.name);
-        }
-      } else {
-        card.css('opacity', '0.65');
-      }
+        engine.setBoard(engine.START_FEN);
+      });
     });
   });
   
@@ -865,11 +930,13 @@
   }
   
   // create chess board widget instance
-  var board = Chessboard('chessboard', config)
+  // create chess board widget instance
+  let board = null;
 
   // Bind click event for valid move highlights
   $('#chessboard').on('click', '.square-55d63', function() {
     if (!window.powerSelected) return;
+    if (!board) return;
     
     const classList = $(this).attr('class').split(/\s+/);
     const squareClass = classList.find(c => c.startsWith('square-') && c !== 'square-55d63');
@@ -940,14 +1007,6 @@
         if (response.success && response.saved_game) {
           const savedGame = response.saved_game;
           
-          // Set board FEN in engine and board UI
-          let fenToLoad = savedGame.fen;
-          if (fenToLoad.split(' ').length < 6) {
-            fenToLoad += ' KQkq - 0 1';
-          }
-          engine.setBoard(fenToLoad);
-          board.position(fenToLoad);
-          
           // Set active player power
           window.activePlayerPower = savedGame.power_type;
           window.powerSelected = true;
@@ -956,32 +1015,37 @@
             engine.setPlayerPower(savedGame.power_type);
           }
           
-          // Reveal the selected card and hide others in the UI
           const power = powersList.find(p => p.value === savedGame.power_type);
           const powerName = power ? power.name : 'None';
+          const powerDesc = power ? power.desc : '';
+          
+          // Populate active power header
+          $('#active-power-title').text(powerName);
+          $('#active-power-desc').text(powerDesc);
           
           const lives = (engine.getKingLives && typeof engine.getKingLives === 'function') ? engine.getKingLives() : 2;
           lastKingLives = lives;
           updateKingLivesUI();
-          if (savedGame.power_type !== 'undying_king') {
-            $('#active-power-label').text(powerName);
+          
+          // Hide power cards panel immediately
+          $('#power-panel').hide();
+          
+          // Show active power header
+          $('#active-power-header').show();
+          
+          // Show play area
+          $('#game-play-area').show();
+          
+          // Set board FEN in engine and board UI
+          let fenToLoad = savedGame.fen;
+          if (fenToLoad.split(' ').length < 6) {
+            fenToLoad += ' KQkq - 0 1';
           }
+          engine.setBoard(fenToLoad);
           
-          // Select and highlight the card in the grid
-          const grid = $('#power-grid');
-          grid.empty();
-          
-          powersList.forEach((p, idx) => {
-            const isSelected = p.value === savedGame.power_type;
-            grid.append(`
-              <label class="power-card revealed ${isSelected ? 'active' : ''}" data-power="${p.value}" data-index="${idx}" style="${isSelected ? '' : 'opacity: 0.65;'}">
-                <input class="power-card__radio" type="radio" name="active_power" value="${p.value}" ${isSelected ? 'checked' : ''} style="position: absolute; opacity: 0; pointer-events: none;">
-                <span class="power-card__badge">User only</span>
-                <span class="power-card__name">${p.name}</span>
-                <span class="power-card__desc">${p.desc}</span>
-              </label>
-            `);
-          });
+          // Initialize board widget since container is now visible
+          board = Chessboard('chessboard', config);
+          board.position(fenToLoad);
           
           // Start the play duration timer
           startTimer();
@@ -991,5 +1055,8 @@
         console.error('Failed to resume game:', xhr.responseText);
       }
     });
+  } else {
+    // New game flow
+    runShufflingAnimation();
   }
 </script>
