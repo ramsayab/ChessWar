@@ -382,6 +382,11 @@
         box-shadow: 0 0 10px rgba(201, 168, 76, 0.3);
       }
 
+      /* Highlight for selected square */
+      .square-55d63.selected-square {
+        box-shadow: inset 0 0 3px 3px var(--game-gold) !important;
+      }
+
       /* Card Shuffling Animation */
       .shuffling-card {
         animation: cardShuffleEffect 1.2s ease-in-out infinite;
@@ -688,7 +693,7 @@
   let selectedSquare = null;
 
   function removeHighlights() {
-    $('.square-55d63').removeClass('highlight-hint has-piece');
+    $('.square-55d63').removeClass('highlight-hint has-piece selected-square');
   }
 
   function highlightSquareMoves(square) {
@@ -1207,10 +1212,12 @@
 
   // on dropping piece
   function onDrop (source, target) {
+    if (source === target) return 'snapback';
+
     removeHighlights();
     selectedSquare = null;
 
-    let promotedPiece = (engine.getSide() ? (5 + 6): 5) // queen promotion only for now
+    let promotedPiece = (engine.getSide() ? (5 + 6): 5); // queen promotion only for now
     let move = source + target + engine.promotedToString(promotedPiece);
     let validMove = engine.moveFromString(move);
 
@@ -1279,8 +1286,9 @@
       return false;
     }
 
-    selectedSquare = null;
+    selectedSquare = source;
     highlightSquareMoves(source);
+    $('.square-' + source).addClass('selected-square');
   }
 
   // chess board configuration
@@ -1298,16 +1306,65 @@
   // create chess board widget instance
   let board = null;
 
-  // Bind click event for valid move highlights
-  $('#chessboard').on('click', '.square-55d63', function() {
+  // Bind pointerdown event for valid move highlights and click-to-move
+  $('#chessboard').on('pointerdown', '.square-55d63', function(e) {
     if (!window.powerSelected) return;
     if (!board) return;
+    
+    // Only allow moves if it is White's turn (user's turn)
+    if (engine.getSide() !== 0) return;
     
     const classList = $(this).attr('class').split(/\s+/);
     const squareClass = classList.find(c => c.startsWith('square-') && c !== 'square-55d63');
     if (!squareClass) return;
     
     const square = squareClass.substring(7); // e.g. 'e2'
+    
+    // If a piece is already selected, try to move to the clicked square
+    if (selectedSquare && selectedSquare !== square) {
+      let promotedPiece = (engine.getSide() ? (5 + 6): 5); // queen promotion only for now
+      let move = selectedSquare + square + engine.promotedToString(promotedPiece);
+      let validMove = engine.moveFromString(move);
+      
+      let isLegal = 0;
+      if (validMove !== 0) {
+        let legalMoves = engine.generateLegalMoves();
+        for (let count = 0; count < legalMoves.length; count++) {
+          if (validMove == legalMoves[count].move) {
+            isLegal = 1;
+            break;
+          }
+        }
+      }
+      
+      if (isLegal) {
+        // Capture FEN before moving
+        let fenBefore = engine.generateFen();
+
+        // Make user move in engine
+        engine.makeMove(validMove);    
+        engine.printBoard();
+        
+        // Capture FEN after moving
+        let fenAfter = engine.generateFen();
+
+        // Update UI board position
+        board.position(engine.generateFen());
+
+        // Evaluate move quality
+        evaluateMoveQuality(fenBefore, fenAfter, selectedSquare + square);
+
+        selectedSquare = null;
+        removeHighlights();
+
+        // Check if user's move ended the game
+        if (checkGameStatus()) return;
+        
+        // Make engine move
+        makeMove();
+        return;
+      }
+    }
     
     const srcSq = square[0].charCodeAt() - "a".charCodeAt() + (8 - (square[1].charCodeAt() - "0".charCodeAt())) * 16;
     const pc = engine.getPiece(srcSq);
@@ -1321,6 +1378,7 @@
       } else {
         selectedSquare = square;
         highlightSquareMoves(square);
+        $('.square-' + square).addClass('selected-square');
       }
     } else {
       selectedSquare = null;
