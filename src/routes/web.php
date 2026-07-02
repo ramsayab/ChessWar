@@ -68,12 +68,54 @@ Route::get('/dashboard', function (Illuminate\Http\Request $request) {
     // Fetch saved game
     $savedGame = $user->savedGame;
 
-    return view('dashboard', compact('tab', 'winrate', 'powerCounts', 'avgMinutes', 'totalMatches', 'wonMatches', 'matches', 'savedGame'));
+    // Fetch leaderboard data
+    $leaderboard = \App\Models\User::select('users.id', 'users.name')
+        ->selectRaw('count(matches.id) as total_matches')
+        ->selectRaw('sum(case when matches.is_win = 1 then 1 else 0 end) as won_matches')
+        ->leftJoin('matches', 'users.id', '=', 'matches.user_id')
+        ->where(function($query) {
+            $query->where('users.is_admin', '!=', 1)
+                  ->orWhereNull('users.is_admin');
+        })
+        ->whereDoesntHave('roles', function($q) {
+            $q->whereIn('name', ['admin', 'super_admin']);
+        })
+        ->groupBy('users.id', 'users.name')
+        ->orderByRaw('sum(case when matches.is_win = 1 then 1 else 0 end) desc')
+        ->orderByRaw('count(matches.id) desc')
+        ->take(20)
+        ->get()
+        ->map(function ($player, $index) {
+            $total = (int)$player->total_matches;
+            $won = (int)$player->won_matches;
+            return (object)[
+                'rank' => $index + 1,
+                'id' => $player->id,
+                'name' => $player->name,
+                'total_matches' => $total,
+                'won_matches' => $won,
+                'winrate' => $total > 0 ? round(($won / $total) * 100) : 0,
+            ];
+        });
+
+    // Fetch puzzle progress
+    $puzzlesSolved = $user->puzzleAttempts()->where('solved', true)->count();
+    $puzzlesTotal = 10; // Total hardcoded puzzles
+
+    return view('dashboard', compact(
+        'tab', 'winrate', 'powerCounts', 'avgMinutes',
+        'totalMatches', 'wonMatches', 'matches', 'savedGame',
+        'leaderboard', 'puzzlesSolved', 'puzzlesTotal'
+    ));
 })->middleware('auth')->name('dashboard');
 
 Route::get('/game', function () {
     return view('game');
 })->middleware('auth')->name('game');
+
+Route::get('/puzzle', function () {
+    return view('puzzle');
+})->middleware('auth')->name('puzzle');
 
 Route::post('/matches', function (Illuminate\Http\Request $request) {
     $request->validate([

@@ -59,6 +59,29 @@
               <span>History</span>
             </a>
           </li>
+          <li>
+            <a href="/dashboard?tab=leaderboard" class="sidebar-link {{ $tab === 'leaderboard' ? 'active' : '' }}">
+              <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-dasharray="" stroke-dashoffset="" stroke-width="2">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                <path d="M4 22h16" />
+                <path d="M10 14.66V17c0 .55-.45 1-1 1H4v2h16v-2h-5c-.55 0-1-.45-1-1v-2.34" />
+                <path d="M12 2a5 5 0 0 1 5 5v2a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z" fill="none" stroke="currentColor" />
+              </svg>
+              <span>Leaderboard</span>
+            </a>
+          </li>
+          <li>
+            <a href="/puzzle" class="sidebar-link">
+              <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                <path d="M7.5 10.5c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5z" />
+                <path d="M16.5 10.5c.828 0 1.5-.672 1.5-1.5s-.672-1.5-1.5-1.5-1.5.672-1.5 1.5.672 1.5 1.5 1.5z" />
+                <path d="M6 16c2 3 10 3 12 0" />
+              </svg>
+              <span>Puzzles</span>
+            </a>
+          </li>
         </ul>
       </aside>
 
@@ -69,11 +92,12 @@
           <section class="dash-hero animate animate-2">
             <p class="dash-kicker">Welcome Back</p>
             <h1>Welcome, {{ $displayName }}</h1>
-            <p>Ready for your next match? Jump in, draft your mystery power, and claim victory.</p>
+            <p>Ready for your next match? Jump in, draft your mystery power, and claim victory. You have solved <strong>{{ $puzzlesSolved }} / {{ $puzzlesTotal }}</strong> puzzles.</p>
             <div style="display: flex; gap: 1rem; justify-content: flex-start; margin-top: 1.5rem; flex-wrap: wrap;">
               <a class="play-now-btn" href="/game">Play Now</a>
+              <a class="play-now-btn" href="/puzzle" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); box-shadow: none;">Play Puzzles</a>
               @if(isset($savedGame) && $savedGame)
-                <a class="play-now-btn" href="/game?resume=true" style="background: transparent; color: var(--gold); border: 1px solid var(--gold); box-shadow: none;">Resume Game</a>
+                <a class="play-now-btn" href="/game?resume=true" style="background: transparent; color: var(--gold-lt); border: 1px solid var(--border); box-shadow: none;">Resume Game</a>
               @endif
             </div>
           </section>
@@ -247,8 +271,57 @@
                     @endforeach
                   </tbody>
                 </table>
-              </div>
             @endif
+          </section>
+
+        @elseif($tab === 'leaderboard')
+          <!-- TAB 3: LEADERBOARD -->
+          <section class="history-section leaderboard-section animate animate-2">
+            <div class="history-header">
+              <h2>Top Commanders</h2>
+              <p>Top rankings of Chess War players based on total wins.</p>
+            </div>
+
+            <div class="table-container">
+              <table class="history-table leaderboard-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Matches</th>
+                    <th>Wins</th>
+                    <th>Win Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($leaderboard as $player)
+                    @php
+                      $isCurrentUser = $player->id === auth()->id();
+                      $rankBadge = '';
+                      if ($player->rank === 1) $rankBadge = '🥇';
+                      elseif ($player->rank === 2) $rankBadge = '🥈';
+                      elseif ($player->rank === 3) $rankBadge = '🥉';
+                    @endphp
+                    <tr class="{{ $isCurrentUser ? 'current-user-row' : '' }} {{ $player->rank <= 3 ? 'top-three-row' : '' }}">
+                      <td>
+                        <span class="rank-badge rank-{{ $player->rank }}">
+                          {!! $rankBadge ?: $player->rank !!}
+                        </span>
+                      </td>
+                      <td>
+                        <strong>{{ $player->name }}</strong>
+                        @if($isCurrentUser)
+                          <span class="you-badge">(You)</span>
+                        @endif
+                      </td>
+                      <td>{{ $player->total_matches }}</td>
+                      <td>{{ $player->won_matches }}</td>
+                      <td style="color: var(--gold-lt); font-weight: 500;">{{ $player->winrate }}%</td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
           </section>
         @endif
       </main>

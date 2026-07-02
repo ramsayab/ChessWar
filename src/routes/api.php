@@ -9,6 +9,13 @@ Route::middleware('auth')->group(function () {
             ->selectRaw('count(matches.id) as total_matches')
             ->selectRaw('sum(case when matches.is_win = 1 then 1 else 0 end) as won_matches')
             ->join('matches', 'users.id', '=', 'matches.user_id')
+            ->where(function($query) {
+                $query->where('users.is_admin', '!=', 1)
+                      ->orWhereNull('users.is_admin');
+            })
+            ->whereDoesntHave('roles', function($q) {
+                $q->whereIn('name', ['admin', 'super_admin']);
+            })
             ->groupBy('users.id', 'users.name')
             ->orderByRaw('sum(case when matches.is_win = 1 then 1 else 0 end) desc')
             ->take(10)
@@ -125,6 +132,44 @@ Route::middleware('auth')->group(function () {
         return response()->json([
             'success' => true,
             'saved_game' => $savedGame,
+        ]);
+    });
+
+    // 6. Puzzle - Record Completion
+    Route::post('/puzzle/complete', function (Illuminate\Http\Request $request) {
+        $request->validate([
+            'puzzle_id' => 'required|string',
+            'attempts' => 'required|integer|min:1',
+        ]);
+
+        $attempt = \App\Models\PuzzleAttempt::updateOrCreate(
+            [
+                'user_id' => auth()->id(),
+                'puzzle_id' => $request->puzzle_id,
+            ],
+            [
+                'solved' => true,
+                'attempts' => $request->attempts,
+                'solved_at' => now(),
+            ]
+        );
+
+        return response()->json([
+            'success' => true,
+            'attempt' => $attempt,
+        ]);
+    });
+
+    // 7. Puzzle - Get User Progress
+    Route::get('/puzzle/progress', function () {
+        $attempts = auth()->user()->puzzleAttempts()
+            ->where('solved', true)
+            ->pluck('puzzle_id')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'solved_puzzles' => $attempts,
         ]);
     });
 });

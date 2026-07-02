@@ -570,3 +570,48 @@ body {
         min-height: auto;
     }
 }
+
+/* ── LEADERBOARD STYLES ── */
+.leaderboard-table tr.top-three-row td {
+    background: rgba(201, 168, 76, 0.02);
+}
+
+.leaderboard-table tr.current-user-row td {
+    background: rgba(201, 168, 76, 0.08) !important;
+    border-top: 1px solid rgba(201, 168, 76, 0.35);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.35);
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.rank-1 {
+    font-size: 1.25rem;
+}
+
+.rank-2 {
+    font-size: 1.25rem;
+}
+
+.rank-3 {
+    font-size: 1.25rem;
+}
+
+.you-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.72rem;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+}
+

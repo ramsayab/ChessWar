@@ -387,18 +387,28 @@
         box-shadow: inset 0 0 3px 3px var(--game-gold) !important;
       }
 
-      /* Card Shuffling Animation */
-      .shuffling-card {
-        animation: cardShuffleEffect 1.2s ease-in-out infinite;
-        pointer-events: none;
+      .power-card.mystery {
+        border: 1px dashed rgba(201, 168, 76, 0.4) !important;
+        background: radial-gradient(circle at center, rgba(201, 168, 76, 0.15) 0%, rgba(9, 17, 31, 0.95) 100%) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
       }
-
-      @keyframes cardShuffleEffect {
-        0% { transform: translateY(0) scale(1); z-index: 1; filter: brightness(1); }
-        25% { transform: translateY(12px) scale(0.95) rotate(-2deg); z-index: 0; filter: brightness(0.85); }
-        50% { transform: translateY(0) scale(0.9) rotate(0); z-index: 0; filter: brightness(0.7); }
-        75% { transform: translateY(-12px) scale(1.05) rotate(2deg); z-index: 2; filter: brightness(1.1); }
-        100% { transform: translateY(0) scale(1); z-index: 1; filter: brightness(1); }
+      .power-card.mystery .power-card__badge {
+        background: linear-gradient(135deg, #e2c97e 0%, #c9a84c 100%) !important;
+        color: #0c0f16 !important;
+        font-weight: 600 !important;
+      }
+      .power-card.mystery .power-card__name {
+        color: #e2c97e !important;
+        font-size: 2.2rem !important;
+        text-align: center !important;
+        margin: 18px 0 !important;
+      }
+      .power-card.mystery .power-card__desc {
+        text-align: center !important;
+        color: rgba(244, 239, 227, 0.5) !important;
+        font-size: 0.82rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.08em !important;
       }
 
       .shuffle-status-banner {
@@ -408,14 +418,6 @@
         text-transform: uppercase;
         margin-top: 15px;
         font-weight: 500;
-      }
-      
-      .shuffle-status-banner.shuffling {
-        animation: blinker 1.5s linear infinite;
-      }
-
-      @keyframes blinker {
-        50% { opacity: 0.3; }
       }
 
       .game-shell-compact {
@@ -458,8 +460,8 @@
               <!-- Dynamically populated and shuffled mystery cards -->
             </div>
 
-            <div id="shuffle-status" class="shuffle-status-banner shuffling">
-              Shuffling custom powers...
+            <div id="shuffle-status" class="shuffle-status-banner">
+              Select a card to draw your power.
             </div>
           </div>
         </div>
@@ -511,6 +513,7 @@
 </html>
 
 <script>
+  window.isAdmin = {{ (auth()->user()?->is_admin || auth()->user()?->hasRole('super_admin')) ? 'true' : 'false' }};
   let selectedSquare = null;
 
   function removeHighlights() {
@@ -738,34 +741,46 @@
   }
 
   function runShufflingAnimation() {
-    window.isShuffling = true;
+    window.isShuffling = false;
     const grid = $('#power-grid');
     grid.empty();
     
-    // Shuffle the powers
-    window.currentShuffledPowers = shuffle([...powersList]);
-    
-    // Append cards with staggered animation delays
-    window.currentShuffledPowers.forEach((power, index) => {
-      grid.append(`
-        <label class="power-card mystery shuffling-card" data-power="${power.value}" data-index="${index}" style="animation-delay: ${index * 0.1}s;">
-          <input class="power-card__radio" type="radio" name="active_power" value="${power.value}" style="position: absolute; opacity: 0; pointer-events: none;">
-          <span class="power-card__badge">Mystery Card</span>
-          <span class="power-card__name">???</span>
-          <span class="power-card__desc">Shuffling powers...</span>
-        </label>
-      `);
-    });
+    if (window.isAdmin) {
+      // Admin flow: show all 6 powers with their actual names and descriptions
+      window.currentShuffledPowers = [...powersList];
+      
+      window.currentShuffledPowers.forEach((power, index) => {
+        grid.append(`
+          <label class="power-card" data-power="${power.value}" data-index="${index}">
+            <input class="power-card__radio" type="radio" name="active_power" value="${power.value}" style="position: absolute; opacity: 0; pointer-events: none;">
+            <span class="power-card__badge" style="background: linear-gradient(135deg, #e2c97e 0%, #c9a84c 100%) !important; color: #0c0f16 !important; font-weight: 600 !important;">Power</span>
+            <span class="power-card__name" style="margin-top: 12px !important; font-family: 'Cormorant Garamond', serif !important; font-size: 1.6rem !important; line-height: 1 !important; color: #fff7e4 !important; text-align: left !important; font-weight: normal !important;">${power.name}</span>
+            <span class="power-card__desc" style="margin-top: 8px !important; color: rgba(244, 239, 227, 0.72) !important; font-size: 0.92rem !important; line-height: 1.45 !important; text-transform: none !important; letter-spacing: normal !important; text-align: left !important;">${power.desc}</span>
+          </label>
+        `);
+      });
+      
+      $('#shuffle-status').text('Admin Privilege: Choose any power to activate.');
+    } else {
+      // Normal user flow: show 3 secret cards
+      const shuffled = shuffle([...powersList]);
+      window.currentShuffledPowers = shuffled.slice(0, 3);
+      
+      const romanNumerals = ['I', 'II', 'III'];
+      
+      window.currentShuffledPowers.forEach((power, index) => {
+        grid.append(`
+          <label class="power-card mystery" data-power="${power.value}" data-index="${index}">
+            <input class="power-card__radio" type="radio" name="active_power" value="${power.value}" style="position: absolute; opacity: 0; pointer-events: none;">
+            <span class="power-card__badge">Secret</span>
+            <span class="power-card__name">CARD ${romanNumerals[index]}</span>
+            <span class="power-card__desc">Select to reveal</span>
+          </label>
+        `);
+      });
 
-    $('#shuffle-status').addClass('shuffling').text('Shuffling custom powers...');
-
-    // Stop shuffling after 2000ms
-    setTimeout(function() {
-      window.isShuffling = false;
-      $('.power-card').removeClass('shuffling-card');
-      $('.power-card').find('.power-card__desc').text('Click to select and reveal this power.');
-      $('#shuffle-status').removeClass('shuffling').text('Choose one card to select your power.');
-    }, 2000);
+      $('#shuffle-status').text('Choose one card to select your power.');
+    }
   }
 
   $('#power-grid').on('click', '.power-card', function() {
