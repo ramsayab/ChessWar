@@ -434,139 +434,6 @@
         max-width: 440px;
       }
 
-      .analysis-sidebar {
-        width: min(440px, 100%);
-        border: 1px solid var(--game-border);
-        border-radius: 30px;
-        background: var(--game-panel);
-        padding: 24px;
-        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        text-align: left;
-        position: relative;
-      }
-
-      .analysis-sidebar::before {
-        content: '';
-        position: absolute;
-        inset: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 22px;
-        pointer-events: none;
-      }
-
-      .analysis-title {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 1.6rem;
-        color: #fff7e4;
-        margin: 0;
-        border-bottom: 1px solid rgba(201, 168, 76, 0.2);
-        padding-bottom: 8px;
-      }
-
-      .analysis-card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 16px;
-        padding: 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        font-size: 0.92rem;
-      }
-
-      .analysis-card-item {
-        display: flex;
-        justify-content: space-between;
-      }
-
-      .analysis-card-label {
-        color: rgba(244, 239, 227, 0.6);
-      }
-
-      .analysis-card-value {
-        font-weight: 600;
-        color: #fff7e4;
-      }
-
-      .analysis-moves-log-container {
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-      }
-
-      .analysis-moves-log-header {
-        font-size: 0.75rem;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--game-gold);
-        margin-bottom: 6px;
-      }
-
-      .analysis-moves-log {
-        flex-grow: 1;
-        min-height: 120px;
-        max-height: 200px;
-        overflow-y: auto;
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        font-size: 0.88rem;
-        font-family: monospace;
-      }
-
-      .analysis-moves-log-empty {
-        color: rgba(244, 239, 227, 0.4);
-        text-align: center;
-        margin-top: auto;
-        margin-bottom: auto;
-        font-family: sans-serif;
-      }
-
-      .move-feedback-banner {
-        width: 100%;
-        max-width: 440px;
-        min-height: 52px;
-        margin: 15px auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px dashed rgba(201, 168, 76, 0.2);
-        color: rgba(244, 239, 227, 0.6);
-        font-weight: 500;
-        font-size: 1.05rem;
-        text-align: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        transition: all 0.2s ease-in-out;
-      }
-
-      @keyframes feedbackPop {
-        0% {
-          transform: scale(0.92);
-          opacity: 0;
-        }
-        50% {
-          transform: scale(1.03);
-        }
-        100% {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-
-      .feedback-animate {
-        animation: feedbackPop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-      }
     </style>
     
   </head>
@@ -608,12 +475,7 @@
               <div id="king-lives-indicator" style="display: none; margin-top: 8px; font-size: 0.9rem; color: #ff5252; font-weight: 500;"></div>
           </div>
 
-          <!-- 2. Move Feedback Banner (Always visible placeholder to prevent jumping) -->
-          <div id="move-feedback" class="move-feedback-banner">
-              Waiting for your first move... ⏱️
-          </div>
-
-          <!-- 3. Side-by-Side Flex Layout (Board Box + Analysis Sidebar) -->
+          <!-- 3. Side-by-Side Flex Layout (Board Box) -->
           <div class="game-arena-grid">
               
               <!-- Left side: The Board Box (Compact game-shell) -->
@@ -635,47 +497,6 @@
                       <div class="col btn-group mt-3" style="width: 100%; display: flex; justify-content: center; gap: 0.5rem;">
                         <button id="save-game-btn" class="btn btn-outline-secondary" style="background: rgba(40, 167, 69, 0.12); border-color: rgba(40, 167, 69, 0.35); color: #fff;">Save Game</button>
                         <a href="/dashboard" class="btn btn-outline-secondary">Exit to Dashboard</a>
-                      </div>
-                  </div>
-              </div>
-
-              <!-- Right side: Analysis Sidebar -->
-              <div class="analysis-sidebar">
-                  <h3 class="analysis-title">📊 Move Analysis</h3>
-                  
-                  <!-- Score Evaluation meter -->
-                  <div id="eval-meter-container" style="width: 100%;">
-                      <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: rgba(244, 239, 227, 0.7); margin-bottom: 4px;">
-                          <span>Win Chance (White)</span>
-                          <span id="eval-win-chance">50%</span>
-                      </div>
-                      <div style="width: 100%; height: 10px; background: #111; border-radius: 5px; overflow: hidden; display: flex; border: 1px solid rgba(255, 255, 255, 0.1);">
-                          <div id="eval-bar-white" style="width: 50%; height: 100%; background: var(--game-gold); transition: width 0.3s ease;"></div>
-                          <div id="eval-bar-black" style="width: 50%; height: 100%; background: #222; transition: width 0.3s ease;"></div>
-                      </div>
-                  </div>
-
-                  <!-- Detailed Evaluation Card -->
-                  <div class="analysis-card">
-                      <div class="analysis-card-item">
-                          <span class="analysis-card-label">Engine Score:</span>
-                          <span id="eval-score" class="analysis-card-value">0.00</span>
-                      </div>
-                      <div class="analysis-card-item">
-                          <span class="analysis-card-label">Best Move:</span>
-                          <span id="eval-best-move" class="analysis-card-value" style="color: var(--game-gold);">-</span>
-                      </div>
-                      <div class="analysis-card-item">
-                          <span class="analysis-card-label">Move Quality:</span>
-                          <span id="eval-quality" class="analysis-card-value">-</span>
-                      </div>
-                  </div>
-
-                  <!-- Moves History list -->
-                  <div class="analysis-moves-log-container">
-                      <span class="analysis-moves-log-header">Move Review Log</span>
-                      <div id="analysis-moves-log" class="analysis-moves-log">
-                          <div class="analysis-moves-log-empty">Game history will appear here.</div>
                       </div>
                   </div>
               </div>
@@ -838,23 +659,7 @@
     window.activePlayerPower = '';
     window.moveCounter = 0;
     
-    // Reset Move Feedback banner
-    $('#move-feedback')
-      .html('Waiting for your first move... ⏱️')
-      .css({
-        'background': 'rgba(255, 255, 255, 0.02)',
-        'border': '1px dashed rgba(201, 168, 76, 0.2)',
-        'color': 'rgba(244, 239, 227, 0.6)'
-      });
 
-    // Reset Sidebar analysis UI
-    $('#eval-win-chance').text('50%');
-    $('#eval-bar-white').css('width', '50%');
-    $('#eval-bar-black').css('width', '50%');
-    $('#eval-score').text('0.00');
-    $('#eval-best-move').text('-');
-    $('#eval-quality').text('-').css('color', '#ffffff');
-    $('#analysis-moves-log').html('<div class="analysis-moves-log-empty">Game history will appear here.</div>');
 
     // Hide gameplay arena wrapper
     $('#game-arena-wrapper').hide();
@@ -1080,135 +885,7 @@
     }, 300);
   }
 
-  function calculateWinChance(score) {
-    let winChance = 100 / (1 + Math.pow(10, -score / 4));
-    return Math.round(winChance);
-  }
 
-  function evaluateMoveQuality(fenBefore, fenAfter, moveStr) {
-    $.ajax({
-      url: '/api/game/evaluate-move',
-      type: 'POST',
-      data: {
-        _token: '{{ csrf_token() }}',
-        fen_before: fenBefore + ' KQkq - 0 1',
-        fen_after: fenAfter + ' KQkq - 0 1',
-        is_white_turn: 1,
-        move: moveStr
-      },
-      success: function(response) {
-        if (response.success) {
-          const feedback = $('#move-feedback');
-          let text = '';
-          let bg = '';
-          let border = '';
-          let color = '';
-
-          switch (response.classification) {
-            case 'Best Move':
-              text = 'Best Move ✨';
-              bg = 'rgba(46, 204, 113, 0.15)';
-              border = '1px solid rgba(46, 204, 113, 0.4)';
-              color = '#2ecc71';
-              break;
-            case 'Excellent':
-              text = 'Excellent 🌟';
-              bg = 'rgba(26, 188, 156, 0.15)';
-              border = '1px solid rgba(26, 188, 156, 0.4)';
-              color = '#1abc9c';
-              break;
-            case 'Good':
-              text = 'Good 👍';
-              bg = 'rgba(52, 152, 219, 0.15)';
-              border = '1px solid rgba(52, 152, 219, 0.4)';
-              color = '#3498db';
-              break;
-            case 'Inaccuracy':
-              text = 'Inaccuracy ⚠️';
-              bg = 'rgba(241, 196, 15, 0.15)';
-              border = '1px solid rgba(241, 196, 15, 0.4)';
-              color = '#f1c40f';
-              break;
-            case 'Mistake':
-              text = 'Mistake 🟠';
-              bg = 'rgba(230, 126, 34, 0.15)';
-              border = '1px solid rgba(230, 126, 34, 0.4)';
-              color = '#e67e22';
-              break;
-            case 'Blunder':
-              text = 'Blunder 🔴';
-              bg = 'rgba(231, 76, 60, 0.15)';
-              border = '1px solid rgba(231, 76, 60, 0.4)';
-              color = '#e74c3c';
-              break;
-            default:
-              text = response.classification;
-              bg = 'rgba(255, 255, 255, 0.1)';
-              border = '1px solid rgba(255, 255, 255, 0.2)';
-              color = '#ffffff';
-          }
-
-          feedback.html(`${text} <span style="font-size: 0.85rem; opacity: 0.8; margin-left: 6px;">(${response.delta_centipawns > 0 ? '+' : ''}${response.delta_centipawns} cp)</span>`)
-            .css({
-              'background': bg,
-              'border': border,
-              'color': color
-            });
-
-          // Show and trigger CSS pop animation
-          feedback.show().removeClass('feedback-animate');
-          void feedback[0].offsetWidth; // force browser layout reflow
-          feedback.addClass('feedback-animate');
-
-          // --- UPDATE SIDEBAR METRICS ---
-
-          // 1. Win Chance Meter
-          let winChance = 50;
-          if (response.mate_after !== null) {
-            winChance = response.mate_after > 0 ? 100 : 0;
-          } else if (response.eval_after !== undefined) {
-            winChance = calculateWinChance(response.eval_after);
-          }
-          $('#eval-win-chance').text(winChance + '%');
-          $('#eval-bar-white').css('width', winChance + '%');
-          $('#eval-bar-black').css('width', (100 - winChance) + '%');
-
-          // 2. Engine Score Text
-          let scoreText = '0.00';
-          if (response.mate_after !== null) {
-            scoreText = 'M' + Math.abs(response.mate_after);
-            if (response.mate_after < 0) scoreText = '-' + scoreText;
-          } else if (response.eval_after !== undefined) {
-            scoreText = response.eval_after.toFixed(2);
-            if (response.eval_after > 0) scoreText = '+' + scoreText;
-          }
-          $('#eval-score').text(scoreText);
-
-          // 3. Recommended Best Move
-          $('#eval-best-move').text(response.best_move ? response.best_move : '-');
-
-          // 4. Move Quality
-          $('#eval-quality').text(response.classification).css('color', color);
-
-          // 5. Scrollable Move Log
-          window.moveCounter = (window.moveCounter || 0) + 1;
-          const movesLog = $('#analysis-moves-log');
-          if (movesLog.find('.analysis-moves-log-empty').length > 0) {
-            movesLog.empty();
-          }
-          let moveEntry = `<div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 4px 0;">` +
-                         `<span style="color: rgba(244,239,227,0.7); font-weight: 500;">${window.moveCounter}. ${moveStr}</span>` +
-                         `<span style="color: ${color}; font-weight: bold;">${response.classification}</span>` +
-                         `</div>`;
-          movesLog.append(moveEntry);
-          movesLog.scrollTop(movesLog[0].scrollHeight);
-        }
-      },
-      error: function(xhr) {
-        console.error('Failed to evaluate move:', xhr.responseText);
-      }
-    });
-  }
 
   // on dropping piece
   function onDrop (source, target) {
@@ -1236,18 +913,9 @@
     // illegal move
     if (isLegal == 0) return 'snapback';
     
-    // Capture FEN before moving
-    let fenBefore = engine.generateFen();
-
     // make user move
     engine.makeMove(validMove);    
     engine.printBoard();
-    
-    // Capture FEN after moving
-    let fenAfter = engine.generateFen();
-
-    // Evaluate move quality
-    evaluateMoveQuality(fenBefore, fenAfter, source + target);
 
     // Check if user's move ended the game
     if (checkGameStatus()) return;
@@ -1338,21 +1006,12 @@
       }
       
       if (isLegal) {
-        // Capture FEN before moving
-        let fenBefore = engine.generateFen();
-
         // Make user move in engine
         engine.makeMove(validMove);    
         engine.printBoard();
         
-        // Capture FEN after moving
-        let fenAfter = engine.generateFen();
-
         // Update UI board position
         board.position(engine.generateFen());
-
-        // Evaluate move quality
-        evaluateMoveQuality(fenBefore, fenAfter, selectedSquare + square);
 
         selectedSquare = null;
         removeHighlights();
